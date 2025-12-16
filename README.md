@@ -15,15 +15,11 @@ Miniflux RSS Companion is a lightweight Chrome/Chromium extension that displays 
 ## Privacy Policy
 Miniflux RSS Companion does not collect, store, transmit, or share personal data.
 
-- All functionality runs locally in the user’s browser  
-- Only user preferences (server URL, refresh interval, view selection) are stored using Chrome’s local extension storage  
+- All extension functionality runs locally in the user’s browser  
+- User preferences (server URL, refresh interval, view selection) are stored using Chrome’s extension storage and may be synced by Chrome across the user’s devices  
 - The extension communicates solely with the Miniflux server URL provided by the user  
 - No analytics, tracking, advertising, cookies, or third-party requests  
 - No remote code is loaded or executed  
 
 ## License
 This project is licensed under the GNU General Public License v3.0 (GPL-3.0), or (at your option) any later version.
-
-See the LICENSE file for the full license text.
-
-
