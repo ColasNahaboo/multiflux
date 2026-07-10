@@ -1,0 +1,49 @@
+{
+  "manifest_version": 3,
+  "name": "Miniflux Companion",
+  "description": "Shows Miniflux unread count in the toolbar badge.",
+  "version": "1.0.0",
+
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "64": "icons/icon64.png",
+    "128": "icons/icon128.png"
+  },
+
+  "action": {
+    "default_title": "Miniflux",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "64": "icons/icon64.png",
+      "128": "icons/icon128.png"
+    }
+  },
+
+  "background": {
+    "service_worker": "background.js"
+  },
+
+  "omnibox": {
+    "keyword": "mf"
+  },
+
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+
+  "permissions": [
+    "storage",
+    "alarms",
+    "tabs",
+    "omnibox"
+  ],
+
+  "optional_host_permissions": [
+    "https://*/*"
+  ]
+}
