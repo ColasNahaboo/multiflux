@@ -1,157 +1,265 @@
-const fields = [
-	'url',
-	'refresh',
-	'badgeTextColor',
-	'badgeBgColor',
-	'openMode',
-	'tabMode',
-	'instantUpdate',
-	'useEnhancedReader',
-	'maxItems',
-	'theme',
-]
-const BADGE_REFRESH_MESSAGE = 'refreshBadge'
+import {
+	DEFAULT_SETTINGS,
+	normalizeServerUrl,
+	parseKeywords,
+	testMinifluxConnection,
+} from './settings-utils.js'
+
+const fields = Object.keys(DEFAULT_SETTINGS)
+const byId = (id) => document.getElementById(id)
+let keywords = []
+let initialSnapshot = ''
+let loading = true
+
+const storageGet = (area, keys) =>
+	new Promise((resolve) => chrome.storage[area].get(keys, resolve))
+const storageSet = (area, values) =>
+	new Promise((resolve, reject) =>
+		chrome.storage[area].set(values, () =>
+			chrome.runtime.lastError
+				? reject(chrome.runtime.lastError)
+				: resolve()
+		)
+	)
+const storageRemove = (area, keys) =>
+	new Promise((resolve) => chrome.storage[area].remove(keys, resolve))
 
 function requestBackgroundRefresh() {
 	chrome.runtime.sendMessage(
-		{ type: BADGE_REFRESH_MESSAGE, resetAlarm: true },
-		(response) => {
-			if (chrome.runtime.lastError || !response?.ok) {
-				console.error(
-					'Could not refresh the unread badge:',
-					chrome.runtime.lastError?.message || response?.error
-				)
-			}
-		}
+		{ type: 'refreshBadge', resetAlarm: true },
+		() => void chrome.runtime.lastError
 	)
-}
-
-function loadApiToken() {
-	chrome.storage.local.get('apiToken', (localData) => {
-		chrome.storage.sync.get('password', (syncData) => {
-			const apiToken = localData.apiToken || syncData.password || ''
-			document.getElementById('apiToken').value = apiToken
-
-			if (!localData.apiToken && syncData.password) {
-				chrome.storage.local.set(
-					{ apiToken: syncData.password },
-					() => {
-						if (!chrome.runtime.lastError) {
-							chrome.storage.sync.remove('password', () => {
-								requestBackgroundRefresh()
-							})
-						}
-					}
-				)
-			} else if (localData.apiToken && syncData.password) {
-				chrome.storage.sync.remove('password')
-			}
-		})
-	})
 }
 
 function updateReaderModeState() {
-	const enhancedReaderEnabled =
-		document.getElementById('useEnhancedReader').checked
-	document.getElementById('openModeGroup').disabled = enhancedReaderEnabled
-	document.getElementById('enhancedReaderSettings').disabled =
-		!enhancedReaderEnabled
+	const enabled = byId('useEnhancedReader').checked
+	byId('openModeGroup').disabled = enabled
+	byId('enhancedReaderSettings').disabled = !enabled
 }
 
-chrome.storage.sync.get(fields, (data) => {
-	document.getElementById('url').value = data.url || ''
-	document.getElementById('refresh').value = data.refresh || 5
-	document.getElementById('maxItems').value = data.maxItems || 100
-	document.getElementById('theme').value = ['auto', 'light', 'dark'].includes(
-		data.theme
+function updateBadgePreview() {
+	byId('previewCount').style.color = byId('badgeTextColor').value
+	byId('previewCount').style.backgroundColor = byId('badgeBgColor').value
+}
+
+function renderKeywords() {
+	byId('chips').replaceChildren(
+		...keywords.map((keyword, index) => {
+			const chip = document.createElement('span')
+			chip.className = 'chip'
+			chip.append(document.createTextNode(keyword))
+			const remove = document.createElement('button')
+			remove.type = 'button'
+			remove.textContent = '×'
+			remove.setAttribute('aria-label', `Remove ${keyword}`)
+			remove.addEventListener('click', () => {
+				keywords.splice(index, 1)
+				renderKeywords()
+				markDirty()
+			})
+			chip.append(remove)
+			return chip
+		})
 	)
-		? data.theme
-		: 'auto'
-	document.getElementById('badgeTextColor').value =
-		data.badgeTextColor || '#ffffff'
-	document.getElementById('badgeBgColor').value =
-		data.badgeBgColor || '#ff6f00'
+}
 
+function commitKeywords(value = byId('keywordInput').value) {
+	keywords = parseKeywords([...keywords, ...String(value).split(',')])
+	byId('keywordInput').value = ''
+	renderKeywords()
+	markDirty()
+}
+
+function currentSettings() {
+	return {
+		url: byId('url').value.trim(),
+		refresh: Number(byId('refresh').value),
+		badgeTextColor: byId('badgeTextColor').value,
+		badgeBgColor: byId('badgeBgColor').value,
+		openMode: document.querySelector('[name=openMode]:checked').value,
+		tabMode: document.querySelector('[name=tabMode]:checked').value,
+		instantUpdate: byId('instantUpdate').checked,
+		useEnhancedReader: byId('useEnhancedReader').checked,
+		maxItems: Number(byId('maxItems').value),
+		theme: byId('theme').value,
+		autoReadTitleKeywords: keywords,
+		apiToken: byId('apiToken').value,
+	}
+}
+
+const snapshot = () => JSON.stringify(currentSettings())
+function markDirty() {
+	if (!loading) byId('save').disabled = snapshot() === initialSnapshot
+}
+
+function applySettings(settings, apiToken = byId('apiToken').value) {
+	for (const id of [
+		'url',
+		'refresh',
+		'badgeTextColor',
+		'badgeBgColor',
+		'maxItems',
+		'theme',
+	])
+		byId(id).value = settings[id]
+	byId('apiToken').value = apiToken
+	for (const id of ['instantUpdate', 'useEnhancedReader'])
+		byId(id).checked = Boolean(settings[id])
 	document.querySelector(
-		`input[name="openMode"][value="${data.openMode || 'unread'}"]`
+		`[name=openMode][value="${settings.openMode}"]`
 	).checked = true
-
 	document.querySelector(
-		`input[name="tabMode"][value="${data.tabMode || 'new'}"]`
+		`[name=tabMode][value="${settings.tabMode}"]`
 	).checked = true
-
-	document.getElementById('instantUpdate').checked = !!data.instantUpdate
-	document.getElementById('useEnhancedReader').checked =
-		!!data.useEnhancedReader
+	keywords = parseKeywords(settings.autoReadTitleKeywords)
+	renderKeywords()
 	updateReaderModeState()
+	updateBadgePreview()
+}
+
+async function load() {
+	const [sync, local] = await Promise.all([
+		storageGet('sync', [...fields, 'password']),
+		storageGet('local', ['apiToken', 'account']),
+	])
+	let token = local.apiToken || sync.password || ''
+	if (!local.apiToken && sync.password) {
+		await storageSet('local', { apiToken: sync.password })
+		await storageRemove('sync', 'password')
+	} else if (local.apiToken && sync.password)
+		await storageRemove('sync', 'password')
+	applySettings(
+		{
+			...DEFAULT_SETTINGS,
+			...sync,
+			autoReadTitleKeywords: parseKeywords(sync.autoReadTitleKeywords),
+		},
+		token
+	)
+	if (local.account) showAccount(local.account)
+	const releaseVersion = chrome.runtime.getManifest().version
+	byId('version').textContent = `Version ${releaseVersion}`
+	loading = false
+	initialSnapshot = snapshot()
+	markDirty()
+}
+
+function showAccount(account) {
+	byId('connectionStatus').classList.add('visible')
+	const heading = document.createElement('strong')
+	heading.textContent = `Connected as ${account.username}`
+	const details = document.createElement('span')
+	details.textContent = `User ID ${account.id} · ${account.hostname}`
+	byId('connectionStatus').replaceChildren(heading, details)
+}
+
+byId('keywordInput').addEventListener('keydown', (event) => {
+	if (event.key === 'Enter' || event.key === ',') {
+		event.preventDefault()
+		commitKeywords()
+	} else if (
+		event.key === 'Backspace' &&
+		!event.currentTarget.value &&
+		keywords.length
+	) {
+		keywords.pop()
+		renderKeywords()
+		markDirty()
+	}
+})
+byId('keywordInput').addEventListener('paste', (event) => {
+	const text = event.clipboardData.getData('text')
+	if (text.includes(',')) {
+		event.preventDefault()
+		commitKeywords(text)
+	}
+})
+document.querySelectorAll('input,select').forEach((element) =>
+	element.addEventListener('input', () => {
+		if (element.id === 'useEnhancedReader') updateReaderModeState()
+		if (element.type === 'color') updateBadgePreview()
+		markDirty()
+	})
+)
+
+byId('testConnection').addEventListener('click', async () => {
+	const button = byId('testConnection')
+	button.disabled = true
+	byId('connectionError').textContent = ''
+	byId('connectionStatus').classList.remove('visible')
+	try {
+		const normalized = normalizeServerUrl(byId('url').value)
+		const origin = `${new URL(normalized).origin}/*`
+		const granted = await chrome.permissions.request({ origins: [origin] })
+		if (!granted)
+			throw new Error('Permission denied. Cannot connect to Miniflux.')
+		const account = await testMinifluxConnection(
+			normalized,
+			byId('apiToken').value
+		)
+		byId('url').value = normalized
+		await storageSet('local', { account })
+		showAccount(account)
+		markDirty()
+	} catch (error) {
+		byId('connectionError').textContent =
+			error.message === 'Invalid URL'
+				? 'Enter a valid HTTP or HTTPS Miniflux URL.'
+				: error.message
+	} finally {
+		button.disabled = false
+	}
 })
 
-loadApiToken()
-
-document
-	.getElementById('useEnhancedReader')
-	.addEventListener('change', updateReaderModeState)
-
-document.getElementById('save').addEventListener('click', () => {
-	const serverUrl = url.value.trim()
-	const requestedMaximumItems = Number(maxItems.value)
-
-	if (!Number.isFinite(requestedMaximumItems)) {
-		alert('Maximum items must be a number between 10 and 1000.')
-		return
-	}
-
-	const maximumItems = Math.min(
-		1000,
-		Math.max(10, Math.round(requestedMaximumItems))
-	)
-	maxItems.value = maximumItems
-
-	let origin
+byId('reset').addEventListener('click', () => {
+	applySettings(DEFAULT_SETTINGS, '')
+	byId('connectionStatus').classList.remove('visible')
+	byId('connectionError').textContent = ''
+	markDirty()
+})
+byId('save').addEventListener('click', async () => {
+	byId('status').textContent = ''
 	try {
-		origin = new URL(serverUrl).origin + '/*'
-	} catch (e) {
-		alert('Invalid Miniflux URL')
-		return
-	}
-
-	chrome.permissions.request({ origins: [origin] }, (granted) => {
-		if (!granted) {
-			alert('Permission denied. Cannot connect to Miniflux.')
-			return
-		}
-
-		const syncSettings = {
-			url: serverUrl,
-			refresh: Number(refresh.value),
-			maxItems: maximumItems,
-			theme: theme.value,
-			badgeTextColor: badgeTextColor.value,
-			badgeBgColor: badgeBgColor.value,
-			openMode: document.querySelector('input[name="openMode"]:checked')
-				.value,
-			tabMode: document.querySelector('input[name="tabMode"]:checked')
-				.value,
-			instantUpdate: instantUpdate.checked,
-			useEnhancedReader: useEnhancedReader.checked,
-		}
-
-		chrome.storage.local.set({ apiToken: apiToken.value }, () => {
-			if (chrome.runtime.lastError) {
-				alert('Could not save the API token.')
-				return
-			}
-			chrome.storage.sync.set(syncSettings, () => {
-				if (chrome.runtime.lastError) {
-					alert('Could not save extension settings.')
-					return
-				}
-				chrome.storage.sync.remove('password', () => {
-					requestBackgroundRefresh()
-					status.textContent = 'Saved.'
-					setTimeout(() => (status.textContent = ''), 1500)
-				})
-			})
+		if (byId('keywordInput').value.trim()) commitKeywords()
+		const settings = currentSettings()
+		if (!Number.isInteger(settings.refresh) || settings.refresh < 1)
+			throw new Error('Refresh time must be a positive integer.')
+		if (
+			!Number.isInteger(settings.maxItems) ||
+			settings.maxItems < 10 ||
+			settings.maxItems > 1000
+		)
+			throw new Error(
+				'Maximum items must be an integer between 10 and 1000.'
+			)
+		settings.url = normalizeServerUrl(settings.url)
+		const granted = await chrome.permissions.request({
+			origins: [`${new URL(settings.url).origin}/*`],
 		})
-	})
+		if (!granted)
+			throw new Error('Permission denied. Cannot connect to Miniflux.')
+		const { apiToken, ...syncSettings } = settings
+		await storageSet('local', { apiToken })
+		await storageSet('sync', syncSettings)
+		await storageRemove('sync', 'password')
+		byId('url').value = settings.url
+		initialSnapshot = snapshot()
+		markDirty()
+		requestBackgroundRefresh()
+		byId('status').textContent = 'Changes saved.'
+		setTimeout(() => {
+			byId('status').textContent = ''
+		}, 1800)
+	} catch (error) {
+		byId('status').textContent = error.message
+	}
+})
+window.addEventListener('beforeunload', (event) => {
+	if (!byId('save').disabled) {
+		event.preventDefault()
+		event.returnValue = ''
+	}
+})
+load().catch(() => {
+	byId('status').textContent = 'Settings could not be loaded.'
 })

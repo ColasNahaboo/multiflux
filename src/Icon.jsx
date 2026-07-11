@@ -2,10 +2,10 @@ import React from 'react'
 import {
 	ArrowSync16Regular,
 	Checkmark16Regular,
+	CheckmarkCircle16Regular,
 	ChevronDown16Regular,
 	ChevronRight16Regular,
 	Circle16Regular,
-	CircleHint16Regular,
 	Comment16Regular,
 	Dismiss16Regular,
 	Filter16Regular,
@@ -40,7 +40,7 @@ const icons = {
 	search: Search16Regular,
 	dismiss: Dismiss16Regular,
 	circle: Circle16Regular,
-	checkCircle: CircleHint16Regular,
+	checkCircle: CheckmarkCircle16Regular,
 	chevronRight: ChevronRight16Regular,
 	chevronDown: ChevronDown16Regular,
 }

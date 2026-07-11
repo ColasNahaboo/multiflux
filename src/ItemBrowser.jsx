@@ -3,10 +3,8 @@ import { apiCall, relaTimestamp, requestBadgeRefresh } from './lib/util'
 import styled from 'styled-components'
 import { useHotkeys } from 'react-hotkeys-hook'
 import Icon from './Icon'
-import {
-	bookmarkStateControlStyles,
-	readStateControlStyles,
-} from './readStateStyles'
+import { beginAutoRead } from '../settings-utils'
+import { bookmarkStateControlStyles } from './readStateStyles'
 
 const Favico = styled.img`
 	width: 16px;
@@ -30,7 +28,8 @@ const ItemListRow = styled.div`
 	background-color: ${(props) =>
 		props.selected ? props.theme.selectbg : 'inherit'};
 	&:hover {
-		background-color: ${(props) => props.theme.hoverbg};
+		background-color: ${(props) =>
+			props.selected ? props.theme.selectbg : props.theme.hoverbg};
 		cursor: pointer;
 	}
 	&::before {
@@ -127,10 +126,6 @@ const ItemActions = styled.button`
 	background: transparent;
 `
 
-const ReadStateButton = styled(ItemActions)`
-	${readStateControlStyles}
-`
-
 const BookmarkButton = styled(ItemActions)`
 	${bookmarkStateControlStyles}
 `
@@ -211,28 +206,6 @@ const FeedItem = React.forwardRef((props, ref) => (
 		>
 			<Icon name='star' size={16} />
 		</BookmarkButton>
-		<ReadStateButton
-			$isRead={props.item.status !== 'unread'}
-			onClick={(e) => {
-				e.stopPropagation()
-				props.markRead()
-			}}
-			title={
-				props.item.status === 'unread'
-					? 'Mark item as read'
-					: 'Mark item as unread'
-			}
-			aria-label={
-				props.item.status === 'unread'
-					? 'Mark item as read'
-					: 'Mark item as unread'
-			}
-		>
-			<Icon
-				name={props.item.status === 'unread' ? 'checkCircle' : 'circle'}
-				size={16}
-			/>
-		</ReadStateButton>
 	</ItemListRow>
 ))
 
@@ -321,9 +294,6 @@ function FeedItemList(props) {
 						) || item.feed
 					}
 					onItemChange={() => itemChange(item)}
-					markRead={() =>
-						props.markRead([item], item.status === 'unread')
-					}
 					toggleBookmark={() => props.onToggleBookmark(item)}
 					errorHandler={props.errorHandler}
 				/>
@@ -337,7 +307,7 @@ const Header = styled.div`
 	padding: 2px 8px;
 	width: 100%;
 	box-sizing: border-box;
-	background: ${(props) => props.theme.surface};
+	background: ${(props) => props.theme.readerBar};
 	border-bottom: 1px solid ${(props) => props.theme.border};
 `
 const HeaderText = styled.div`
@@ -470,7 +440,7 @@ function FeedItemHeader(props) {
 						title='Mark all as read'
 						aria-label='Mark all as read'
 					>
-						<Icon name='checkAll' />
+						<Icon name='checkCircle' size={16} />
 					</ControlButton>
 					<ReadFilterSelect
 						title='Filter articles'
@@ -510,6 +480,7 @@ function ItemBrowser(props) {
 	const [showRead, setShowRead] = useState(
 		localStorage.getItem('filter') === 'a'
 	)
+	const pendingAutoReadIds = useRef(new Set())
 
 	const reconcileItems = (entryIds = [], status, feedIds = []) => {
 		const affectedIds = new Set(entryIds)
@@ -647,14 +618,77 @@ function ItemBrowser(props) {
 				result.forEach((response) =>
 					nextItems.push(...response.entries)
 				)
+				const autoRead = beginAutoRead(
+					nextItems,
+					showRead ? [] : props.autoReadTitleKeywords,
+					(entryIds) =>
+						apiCall('entries', () => {}, {
+							entry_ids: entryIds,
+							status: 'read',
+						}),
+					pendingAutoReadIds.current
+				)
+				autoRead.requestedEntries.forEach((item) =>
+					pendingAutoReadIds.current.add(item.id)
+				)
 				if (!cancelled) {
 					setItems(
-						nextItems.sort((a, b) =>
+						autoRead.visibleEntries.sort((a, b) =>
 							sortOldFirst
 								? a.published_at.localeCompare(b.published_at)
 								: b.published_at.localeCompare(a.published_at)
 						)
 					)
+					if (autoRead.requestedEntries.length)
+						props.adjustUnreadCounts(autoRead.requestedEntries, -1)
+				}
+				if (autoRead.requestedEntries.length) {
+					autoRead.completion
+						.then(() => {
+							requestBadgeRefresh()
+							props.updateUnread([
+								...new Set(
+									autoRead.requestedEntries.map(
+										(item) => item.feed.id
+									)
+								),
+							])
+						})
+						.catch(() => {
+							if (!cancelled) {
+								props.adjustUnreadCounts(
+									autoRead.requestedEntries,
+									1
+								)
+								setItems((current) =>
+									[...current, ...autoRead.requestedEntries]
+										.filter(
+											(item, index, all) =>
+												all.findIndex(
+													(candidate) =>
+														candidate.id === item.id
+												) === index
+										)
+										.sort((a, b) =>
+											sortOldFirst
+												? a.published_at.localeCompare(
+														b.published_at
+												  )
+												: b.published_at.localeCompare(
+														a.published_at
+												  )
+										)
+								)
+								props.errorHandler(
+									'Some automatically filtered articles could not be marked read.'
+								)
+							}
+						})
+						.finally(() =>
+							autoRead.requestedEntries.forEach((item) =>
+								pendingAutoReadIds.current.delete(item.id)
+							)
+						)
 				}
 			} catch {
 				if (!cancelled && props.searchQuery) {
@@ -679,6 +713,7 @@ function ItemBrowser(props) {
 		props.searchPath,
 		props.searchQuery,
 		props.viewRevision,
+		props.autoReadTitleKeywords,
 	])
 
 	const markRead = async (i, read) => {

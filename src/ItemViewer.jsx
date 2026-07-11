@@ -10,16 +10,26 @@ import {
 
 const ItemHeader = styled.div`
 	flex: 0 0 auto;
-	height: 34px;
 	display: flex;
-	align-items: center;
-	justify-content: flex-end;
-	gap: 18px;
-	padding: 0 18px;
+	align-items: flex-start;
+	gap: 14px;
+	padding: 14px 16px 12px;
 	box-sizing: border-box;
 	background-color: ${(props) => props.theme.readerBar};
 	border-bottom: 1px solid ${(props) => props.theme.border};
 	z-index: 2;
+`
+
+const HeaderContent = styled.div`
+	flex: 1 1 auto;
+	min-width: 0;
+`
+
+const HeaderActions = styled.div`
+	flex: 0 0 auto;
+	display: flex;
+	align-items: center;
+	gap: 6px;
 `
 
 const ViewerShell = styled.div`
@@ -37,16 +47,17 @@ const ArticleScroll = styled.div`
 `
 
 const ReaderArticle = styled.article`
-	max-width: ${(props) => props.theme.readerWidth};
+	max-width: 960px;
 	margin: 0 auto;
-	padding: 34px 48px 72px;
+	padding: 24px clamp(20px, 5%, 42px) 64px;
 	box-sizing: border-box;
 	color: ${(props) => props.theme.text};
 	overflow-wrap: anywhere;
 `
 
 const ItemTitle = styled.h1`
-	margin: 0 0 14px;
+	margin-top: 0;
+	margin-bottom: 7px;
 	font-size: 22px;
 	line-height: 1.28;
 	font-weight: 700;
@@ -62,16 +73,14 @@ const ItemTitle = styled.h1`
 
 const TitleLink = styled.a`
 	display: inline;
-
-	svg {
-		margin-left: 6px;
-		color: ${(props) => props.theme.muted};
-		vertical-align: 0.05em;
-	}
 `
 
 const ItemMeta = styled.div`
-	margin-bottom: 26px;
+	margin: 0;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	min-width: 0;
 	font-size: 14px;
 	line-height: 1.45;
 	color: ${(props) => props.theme.muted};
@@ -80,19 +89,80 @@ const ItemMeta = styled.div`
 	}
 `
 
+const FeedIcon = styled.img`
+	width: 16px;
+	height: 16px;
+	flex: 0 0 16px;
+	object-fit: contain;
+`
+
+const FallbackFeedIcon = styled.span`
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 16px;
+	height: 16px;
+	flex: 0 0 16px;
+	color: ${(props) => props.theme.muted};
+`
+
+const MetaText = styled.span`
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+`
+
+const FeedLink = styled.a`
+	min-width: 0;
+	max-width: 45%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: inherit;
+`
+
+const MetaSeparator = styled.span`
+	flex: 0 0 auto;
+`
+
+const PublishedDate = styled.span`
+	flex: 0 0 auto;
+	white-space: nowrap;
+`
+
 const ItemContent = styled.div`
 	font-size: 17px;
 	line-height: 1.62;
 	color: ${(props) => props.theme.text};
 	overflow-wrap: anywhere;
 
+	> p,
+	> h1,
+	> h2,
+	> h3,
+	> h4,
+	> h5,
+	> h6,
+	> ul,
+	> ol,
+	> blockquote,
+	> pre,
+	> table {
+		max-width: ${(props) => props.theme.readerWidth};
+		margin-left: auto;
+		margin-right: auto;
+	}
+
 	p {
-		margin: 0 0 1.1em;
+		margin-top: 0;
+		margin-bottom: 1.1em;
 	}
 	img,
 	video,
 	iframe {
 		display: block;
+		width: auto;
 		max-width: 100%;
 		height: auto;
 		margin: 24px auto;
@@ -102,7 +172,8 @@ const ItemContent = styled.div`
 		aspect-ratio: 16 / 9;
 	}
 	blockquote {
-		margin: 1.2em 0;
+		margin-top: 1.2em;
+		margin-bottom: 1.2em;
 		padding: 0.2em 0 0.2em 1em;
 		border-left: 3px solid ${(props) => props.theme.border};
 		color: ${(props) => props.theme.muted};
@@ -115,6 +186,7 @@ const ItemContent = styled.div`
 	pre {
 		overflow-x: auto;
 		padding: 12px;
+		box-sizing: border-box;
 	}
 	table {
 		max-width: 100%;
@@ -130,9 +202,9 @@ const ItemContent = styled.div`
 `
 
 const ActionButton = styled.button`
-	width: 28px;
-	height: 28px;
-	min-width: 28px;
+	width: 26px;
+	height: 26px;
+	min-width: 26px;
 	padding: 0;
 	background: transparent;
 	border-color: transparent;
@@ -173,6 +245,7 @@ const getCommentsUrl = (item) => {
 
 function ItemViewer(props) {
 	const item = props.currentItem
+	const feed = props.feed || item?.feed
 	const commentsUrl = getCommentsUrl(item)
 	const topRef = useRef()
 	const articleScrollRef = useRef()
@@ -218,48 +291,7 @@ function ItemViewer(props) {
 	return !item ? null : (
 		<ViewerShell ref={topRef}>
 			<ItemHeader>
-				<ReadStateAction
-					$isRead={item.status !== 'unread'}
-					title={
-						item.status === 'unread'
-							? 'Mark as read'
-							: 'Mark as unread'
-					}
-					aria-label={
-						item.status === 'unread'
-							? 'Mark as read'
-							: 'Mark as unread'
-					}
-					onClick={toggleRead}
-				>
-					<Icon
-						name={
-							item.status === 'unread' ? 'checkCircle' : 'circle'
-						}
-					/>
-				</ReadStateAction>
-				{commentsUrl && (
-					<ActionButton
-						title='Open comments link'
-						aria-label='Open comments link'
-						onClick={() => window.open(commentsUrl, '_blank')}
-					>
-						<Icon name='comments' />
-					</ActionButton>
-				)}
-				<BookmarkAction
-					$starred={Boolean(item.starred)}
-					title={item.starred ? 'Unstar article' : 'Star article'}
-					aria-label={
-						item.starred ? 'Unstar article' : 'Star article'
-					}
-					onClick={toggleStar}
-				>
-					<Icon name='star' />
-				</BookmarkAction>
-			</ItemHeader>
-			<ArticleScroll ref={articleScrollRef}>
-				<ReaderArticle>
+				<HeaderContent>
 					<ItemTitle>
 						<TitleLink
 							href={item.url}
@@ -269,20 +301,77 @@ function ItemViewer(props) {
 							aria-label={`Open original article: ${item.title}`}
 						>
 							{item.title}
-							<Icon name='externalLink' size={16} />
 						</TitleLink>
 					</ItemTitle>
 					<ItemMeta>
-						{/* eslint-disable-next-line */}
-						<a
+						{feed.icon_data ? (
+							<FeedIcon src={feed.icon_data} alt='' />
+						) : (
+							<FallbackFeedIcon aria-hidden='true'>
+								<Icon name='website' size={14} />
+							</FallbackFeedIcon>
+						)}
+						<FeedLink
 							href='#'
+							title={feed.title}
 							onClick={() => props.onFeedChange(item.feed)}
 						>
-							{item.feed.title}
-						</a>
-						{item.author && <> · {item.author}</>}
-						<> · {formatDate(item.published_at)}</>
+							{feed.title}
+						</FeedLink>
+						{item.author && (
+							<>
+								<MetaSeparator>·</MetaSeparator>
+								<MetaText title={item.author}>
+									{item.author}
+								</MetaText>
+							</>
+						)}
+						<MetaSeparator>·</MetaSeparator>
+						<PublishedDate title={item.published_at}>
+							{formatDate(item.published_at)}
+						</PublishedDate>
 					</ItemMeta>
+				</HeaderContent>
+				<HeaderActions>
+					<ReadStateAction
+						$isRead={item.status !== 'unread'}
+						title={
+							item.status === 'unread'
+								? 'Mark as read'
+								: 'Mark as unread'
+						}
+						aria-label={
+							item.status === 'unread'
+								? 'Mark as read'
+								: 'Mark as unread'
+						}
+						onClick={toggleRead}
+					>
+						<Icon name='checkCircle' size={16} />
+					</ReadStateAction>
+					{commentsUrl && (
+						<ActionButton
+							title='Open comments link'
+							aria-label='Open comments link'
+							onClick={() => window.open(commentsUrl, '_blank')}
+						>
+							<Icon name='comments' />
+						</ActionButton>
+					)}
+					<BookmarkAction
+						$starred={Boolean(item.starred)}
+						title={item.starred ? 'Unstar article' : 'Star article'}
+						aria-label={
+							item.starred ? 'Unstar article' : 'Star article'
+						}
+						onClick={toggleStar}
+					>
+						<Icon name='star' />
+					</BookmarkAction>
+				</HeaderActions>
+			</ItemHeader>
+			<ArticleScroll ref={articleScrollRef}>
+				<ReaderArticle>
 					<ItemContent
 						id='itemcontent'
 						dangerouslySetInnerHTML={{ __html: item.content }}

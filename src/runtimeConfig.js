@@ -5,6 +5,7 @@ const runtimeConfig = {
 	maxItems: 100,
 	refreshMinutes: 0,
 	theme: 'auto',
+	autoReadTitleKeywords: [],
 }
 
 export function configureRuntime(config) {

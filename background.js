@@ -25,6 +25,7 @@ async function getSettings() {
 				'useEnhancedReader',
 				'maxItems',
 				'theme',
+				'autoReadTitleKeywords',
 			],
 			resolve
 		)

@@ -1,6 +1,6 @@
 {
 	"name": "miniflux-companion",
-	"version": "2.0.0",
+	"version": "2.5.0",
 	"private": true,
 	"type": "module",
 	"scripts": {
@@ -8,7 +8,8 @@
 		"build": "node build-extension.mjs",
 		"preview": "vite preview",
 		"format": "prettier --write . --ignore-unknown",
-		"format:check": "prettier --check . --ignore-unknown"
+		"format:check": "prettier --check . --ignore-unknown",
+		"test": "node --test"
 	},
 	"dependencies": {
 		"@fluentui/react-icons": "^2.0.332",

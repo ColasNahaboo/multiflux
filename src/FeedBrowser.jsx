@@ -63,7 +63,8 @@ const FeedRow = styled.div`
 			? props.theme.text
 			: props.theme.readentry};
 	&:hover {
-		background-color: ${(props) => props.theme.hoverbg};
+		background-color: ${(props) =>
+			props.selected ? props.theme.selectbg : props.theme.hoverbg};
 		cursor: pointer;
 	}
 	&::before {
@@ -135,7 +136,7 @@ const SectionHeader = styled.div`
 	margin: 4px 6px 6px;
 	font-size: 12px;
 	color: ${(props) => props.theme.muted};
-	background: ${(props) => props.theme.navbg};
+	background: ${(props) => props.theme.feedBody};
 `
 
 const SectionActions = styled.div`

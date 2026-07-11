@@ -2,164 +2,550 @@
 <html>
 	<head>
 		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
 		<title>Miniflux Companion Options</title>
 		<style>
+			:root {
+				color-scheme: light dark;
+				--page: #f4f6f8;
+				--card: #fff;
+				--text: #18212b;
+				--muted: #607080;
+				--border: #dce2e8;
+				--accent: #e55b24;
+				--success: #e7f7ec;
+				--successText: #176b34;
+				--danger: #b42318;
+			}
+			* {
+				box-sizing: border-box;
+			}
 			body {
-				font-family: sans-serif;
-				max-width: 600px;
-				padding: 20px;
+				margin: 0;
+				font: 13px/1.4 system-ui, -apple-system, 'Segoe UI', sans-serif;
+				color: var(--text);
+				background: var(--page);
+			}
+			.page {
+				max-width: 1180px;
+				margin: auto;
+				padding: 22px 24px 28px;
+			}
+			.page-header {
+				display: flex;
+				align-items: baseline;
+				gap: 10px;
+				margin-bottom: 18px;
+			}
+			.page-header img {
+				width: 36px;
+				height: 36px;
+				align-self: center;
+			}
+			h1 {
+				margin: 0;
+				font-size: 21px;
+				line-height: 1.2;
+				font-weight: 650;
+			}
+			.columns {
+				display: grid;
+				grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+				gap: 16px;
+				align-items: start;
+			}
+			.column {
+				display: grid;
+				gap: 16px;
+			}
+			.card {
+				background: var(--card);
+				border: 1px solid var(--border);
+				border-radius: 7px;
+				box-shadow: 0 1px 4px #18212b0d;
+				padding: 16px 18px;
+			}
+			.card h2 {
+				margin: 0 0 12px;
+				font-size: 15px;
+				font-weight: 650;
 			}
 			label {
 				display: block;
-				margin-top: 14px;
-				font-weight: bold;
+				margin-top: 11px;
+				font-weight: 500;
 			}
 			input[type='text'],
 			input[type='password'],
-			input[type='number'] {
+			input[type='number'],
+			select {
 				width: 100%;
-				box-sizing: border-box;
+				height: 34px;
+				padding: 6px 9px;
+				margin-top: 4px;
+				border: 1px solid var(--border);
+				border-radius: 4px;
+				background: var(--card);
+				color: var(--text);
+			}
+			input:focus-visible,
+			select:focus-visible,
+			button:focus-visible {
+				outline: 3px solid
+					color-mix(in srgb, var(--accent) 35%, transparent);
+				outline-offset: 2px;
 			}
 			.hint {
-				font-weight: normal;
-				font-size: 0.9em;
-				color: #555;
+				font-size: 12px;
+				color: var(--muted);
+				margin-top: 3px;
 			}
 			.group {
-				margin-top: 16px;
-				padding-left: 10px;
+				margin-top: 12px;
 			}
 			fieldset.group {
 				border: 0;
 				margin-left: 0;
 				margin-right: 0;
-				padding-top: 0;
-				padding-right: 0;
-				padding-bottom: 0;
+				padding: 0;
 			}
-			fieldset.group:disabled {
-				opacity: 0.5;
+			fieldset.group legend {
+				padding: 0;
+				margin-bottom: 4px;
 			}
 			.settings-subgroup {
 				border: 0;
-				margin: 8px 0 0;
+				margin: 5px 0 0;
 				padding: 0;
 			}
-			.settings-subgroup:disabled {
+			.settings-subgroup:disabled,
+			.group:disabled {
 				opacity: 0.5;
 			}
 			.warning {
-				color: #b00020;
+				color: var(--danger);
 				font-size: 0.9em;
+				margin-top: 8px;
+			}
+			button {
+				border: 1px solid var(--border);
+				border-radius: 4px;
+				height: 34px;
+				padding: 6px 12px;
+				background: var(--card);
+				color: var(--text);
+				font-weight: 500;
+				cursor: pointer;
+			}
+			button.primary {
+				border-color: var(--accent);
+				background: var(--accent);
+				color: #fff;
+			}
+			button:disabled {
+				opacity: 0.5;
+				cursor: not-allowed;
+			}
+			.connection-actions {
+				margin-top: 13px;
+			}
+			.connection-status {
+				display: none;
+				margin-top: 10px;
+				padding: 9px 11px;
+				border: 1px solid
+					color-mix(in srgb, var(--successText) 22%, transparent);
+				border-radius: 5px;
+				background: var(--success);
+				color: var(--successText);
+			}
+			.connection-status.visible {
+				display: block;
+			}
+			.connection-status strong,
+			.connection-status span {
+				display: block;
+			}
+			.connection-status span {
+				margin-top: 1px;
+				font-size: 12px;
+			}
+			.radio-list label,
+			.check-label {
+				font-weight: 400;
+			}
+			.radio-list label {
+				margin-top: 7px;
+			}
+			input[type='radio'],
+			input[type='checkbox'] {
+				width: 14px;
+				height: 14px;
+				margin: 0 5px 0 0;
+				vertical-align: -2px;
+				accent-color: var(--accent);
+			}
+			.badge-layout {
+				display: grid;
+				grid-template-columns: 120px minmax(0, 1fr);
+				gap: 16px;
+				align-items: stretch;
+			}
+			.badge-preview {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				min-height: 104px;
+				padding: 14px;
+				border: 1px solid var(--border);
+				border-radius: 5px;
+				background: var(--page);
+			}
+			.icon-preview {
+				position: relative;
+				width: 48px;
+				height: 48px;
+			}
+			.icon-preview img {
+				width: 48px;
+				height: 48px;
+			}
+			.preview-count {
+				position: absolute;
+				bottom: -5px;
+				right: -12px;
+				min-width: 28px;
+				padding: 2px 6px;
+				border-radius: 9px;
+				text-align: center;
+				font: 650 12px/16px system-ui;
+				box-shadow: 0 1px 2px #0003;
+			}
+			.color-controls label {
+				display: grid;
+				grid-template-columns: minmax(0, 1fr) 50px;
+				align-items: center;
+				gap: 10px;
+				margin-top: 8px;
+			}
+			.color-controls label:first-child {
+				margin-top: 0;
+			}
+			input[type='color'] {
+				width: 50px;
+				height: 34px;
+				padding: 3px;
+				border: 1px solid var(--border);
+				border-radius: 4px;
+				background: var(--card);
+				cursor: pointer;
+			}
+			.chip-box {
+				display: flex;
+				flex-wrap: wrap;
+				align-items: center;
+				gap: 6px;
+				min-height: 36px;
+				padding: 4px 6px;
 				margin-top: 6px;
+				border: 1px solid var(--border);
+				border-radius: 5px;
+				background: var(--card);
+			}
+			#chips {
+				display: contents;
+			}
+			.chip {
+				display: inline-flex;
+				align-items: center;
+				gap: 5px;
+				padding: 3px 7px;
+				border-radius: 14px;
+				background: color-mix(in srgb, var(--accent) 13%, var(--card));
+			}
+			.chip button {
+				border: 0;
+				padding: 0 2px;
+				background: transparent;
+				font-size: 17px;
+				line-height: 1;
+			}
+			#keywordInput {
+				flex: 1;
+				min-width: 150px;
+				width: auto;
+				margin: 0;
+				padding: 4px;
+				border: 0;
+				outline: 0;
+				height: 26px;
+				font: inherit;
+			}
+			.action-bar {
+				position: sticky;
+				bottom: 0;
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				gap: 16px;
+				margin-top: 16px;
+				padding: 10px 12px;
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				background: color-mix(in srgb, var(--card) 94%, transparent);
+				box-shadow: 0 -2px 12px #18212b0f;
+				backdrop-filter: blur(8px);
+			}
+			.save-side {
+				display: flex;
+				align-items: center;
+				gap: 14px;
+			}
+			#status {
+				color: var(--successText);
+			}
+			.card p {
+				margin: 0 0 8px;
+			}
+			.about-product {
+				font-weight: 600;
+			}
+			@media (max-width: 760px) {
+				.page {
+					padding: 16px 14px 20px;
+				}
+				.columns {
+					grid-template-columns: 1fr;
+				}
+				.action-bar {
+					position: static;
+				}
+				.badge-layout {
+					grid-template-columns: 105px minmax(0, 1fr);
+				}
+			}
+			@media (prefers-color-scheme: dark) {
+				:root {
+					--page: #11161b;
+					--card: #1b2229;
+					--text: #edf2f6;
+					--muted: #aab7c2;
+					--border: #36414b;
+					--success: #153c24;
+					--successText: #8fe1a9;
+				}
+				.card {
+					box-shadow: none;
+				}
 			}
 		</style>
 	</head>
 	<body>
-		<h2>Miniflux Companion</h2>
-
-		<label>
-			Miniflux URL
-			<input id="url" type="text" placeholder="https://example.com" />
-		</label>
-
-		<label>
-			API token
-			<input id="apiToken" type="password" />
-			<div class="hint">
-				Create this in Miniflux → Settings → API Keys
+		<main class="page">
+			<header class="page-header">
+				<img src="icons/icon64.png" alt="" />
+				<h1>Miniflux Companion</h1>
+			</header>
+			<div class="columns">
+				<div class="column">
+					<section class="card">
+						<h2>Connection</h2>
+						<label
+							>Miniflux URL<input
+								id="url"
+								type="text"
+								placeholder="https://example.com" /></label
+						><label
+							>API token<input
+								id="apiToken"
+								type="password"
+								autocomplete="off"
+							/><span class="hint"
+								>Create this in Miniflux → Settings → API
+								Keys</span
+							></label
+						>
+						<div class="connection-actions">
+							<button id="testConnection" type="button">
+								Test connection
+							</button>
+						</div>
+						<div
+							id="connectionError"
+							class="warning"
+							role="alert"
+						></div>
+						<div
+							id="connectionStatus"
+							class="connection-status"
+							role="status"
+						></div>
+					</section>
+					<section class="card">
+						<h2>Reader</h2>
+						<label class="check-label"
+							><input type="checkbox" id="useEnhancedReader" />
+							Use enhanced three-pane reader</label
+						>
+						<div class="hint">
+							Open the bundled desktop-style reader instead of the
+							standard Miniflux web interface.
+						</div>
+						<fieldset
+							class="settings-subgroup"
+							id="enhancedReaderSettings"
+						>
+							<label
+								>Maximum number of items to fetch<input
+									id="maxItems"
+									type="number"
+									min="10"
+									max="1000"
+									step="1" /></label
+							><label
+								>Theme<select id="theme">
+									<option value="auto">Auto</option>
+									<option value="light">Light</option>
+									<option value="dark">Dark</option>
+								</select></label
+							>
+						</fieldset>
+						<fieldset class="group radio-list" id="openModeGroup">
+							<legend><strong>Open Miniflux to</strong></legend>
+							<label
+								><input
+									type="radio"
+									name="openMode"
+									value="unread"
+								/>
+								Unread articles</label
+							><label
+								><input
+									type="radio"
+									name="openMode"
+									value="categories"
+								/>
+								Categories</label
+							><label
+								><input
+									type="radio"
+									name="openMode"
+									value="feeds"
+								/>
+								Feeds</label
+							>
+						</fieldset>
+					</section>
+					<section class="card">
+						<h2>Filtering</h2>
+						<label for="keywordInput"
+							>Auto-read title keywords</label
+						>
+						<div class="hint">
+							Mark matching new articles as read while keeping
+							them in Miniflux.
+						</div>
+						<div class="chip-box" id="chipBox">
+							<div id="chips"></div>
+							<input
+								id="keywordInput"
+								type="text"
+								aria-label="Add title keyword"
+								placeholder="Type a keyword, then press Enter"
+							/>
+						</div>
+						<div class="hint">
+							Comma-separated words or phrases. Matching is
+							case-insensitive. Titles only.
+						</div>
+					</section>
+				</div>
+				<div class="column">
+					<section class="card">
+						<h2>Extension behavior</h2>
+						<label
+							>Refresh time in minutes<input
+								id="refresh"
+								type="number"
+								min="1"
+								step="1"
+						/></label>
+						<div class="group radio-list">
+							<strong>Tab behavior</strong
+							><label
+								><input
+									type="radio"
+									name="tabMode"
+									value="new"
+								/>
+								Always open a new tab</label
+							><label
+								><input
+									type="radio"
+									name="tabMode"
+									value="focus"
+								/>
+								Focus existing Miniflux tab</label
+							>
+						</div>
+						<label class="check-label"
+							><input type="checkbox" id="instantUpdate" /> Update
+							counter immediately on interaction</label
+						>
+						<div class="hint">
+							Refreshes the unread counter when you click the
+							extension icon.
+						</div>
+					</section>
+					<section class="card">
+						<h2>Badge</h2>
+						<div class="badge-layout">
+							<div class="badge-preview">
+								<div class="icon-preview">
+									<img
+										src="icons/icon64.png"
+										alt="Miniflux Companion icon"
+									/><span
+										id="previewCount"
+										class="preview-count"
+										>24</span
+									>
+								</div>
+							</div>
+							<div class="color-controls">
+								<label
+									>Badge text color<input
+										id="badgeTextColor"
+										type="color" /></label
+								><label
+									>Badge background color<input
+										id="badgeBgColor"
+										type="color"
+								/></label>
+							</div>
+						</div>
+					</section>
+					<section class="card">
+						<h2>About</h2>
+						<p class="about-product">Miniflux Companion</p>
+						<p id="version" class="hint"></p>
+						<p>
+							Unread badge and optional three-pane reader for your
+							self-hosted Miniflux server.
+						</p>
+					</section>
+				</div>
 			</div>
-		</label>
-
-		<label>
-			Refresh time in minutes
-			<input id="refresh" type="number" min="1" />
-		</label>
-
-		<label>
-			Badge text color
-			<input id="badgeTextColor" type="color" />
-		</label>
-
-		<label>
-			Badge background color
-			<input id="badgeBgColor" type="color" />
-		</label>
-
-		<div class="group">
-			<strong>Enhanced three-pane reader</strong>
-			<label>
-				<input type="checkbox" id="useEnhancedReader" />
-				Use enhanced three-pane reader
-			</label>
-			<div class="hint">
-				Open the bundled desktop-style reader instead of the standard
-				Miniflux web interface.
+			<div class="action-bar">
+				<button id="reset" type="button">Reset to defaults</button>
+				<div class="save-side">
+					<span id="status" role="status"></span
+					><button class="primary" id="save" disabled>
+						Save changes
+					</button>
+				</div>
 			</div>
-			<fieldset class="settings-subgroup" id="enhancedReaderSettings">
-				<label>
-					Maximum number of items to fetch
-					<input
-						id="maxItems"
-						type="number"
-						min="10"
-						max="1000"
-						step="1"
-					/>
-				</label>
-
-				<label>
-					Theme
-					<select id="theme">
-						<option value="auto">Auto</option>
-						<option value="light">Light</option>
-						<option value="dark">Dark</option>
-					</select>
-				</label>
-			</fieldset>
-		</div>
-
-		<fieldset class="group" id="openModeGroup">
-			<legend><strong>Open Miniflux to</strong></legend>
-			<label
-				><input type="radio" name="openMode" value="unread" /> Unread
-				articles</label
-			>
-			<label
-				><input type="radio" name="openMode" value="categories" />
-				Categories</label
-			>
-			<label
-				><input type="radio" name="openMode" value="feeds" />
-				Feeds</label
-			>
-		</fieldset>
-
-		<div class="group">
-			<strong>Tab behaviour</strong><br />
-			<label
-				><input type="radio" name="tabMode" value="new" /> Always open a
-				new tab</label
-			>
-			<label
-				><input type="radio" name="tabMode" value="focus" /> Focus
-				existing Miniflux tab</label
-			>
-		</div>
-
-		<div class="group">
-			<label>
-				<input type="checkbox" id="instantUpdate" />
-				Update counter immediately on interaction
-			</label>
-			<div class="hint">
-				Refreshes the unread counter when you click the extension icon.
-			</div>
-		</div>
-
-		<button id="save">Save</button>
-		<span id="status"></span>
-
-		<script src="options.js"></script>
+			<script type="module" src="options.js"></script>
+		</main>
 	</body>
 </html>

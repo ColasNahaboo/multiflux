@@ -61,8 +61,7 @@ const FeedPane = styled(Pane)`
 	display: flex;
 	flex-direction: column;
 	overflow: hidden;
-	background: ${(props) => props.theme.navbg};
-	border-right: 1px solid ${(props) => props.theme.border};
+	background: ${(props) => props.theme.feedBody};
 `
 
 const ItemPane = styled(Pane)`
@@ -81,27 +80,13 @@ const ReaderPane = styled(Pane)`
 	background: ${(props) => props.theme.surface};
 `
 
-const ResizeHandle = styled.div`
-	flex: 0 0 5px;
-	margin: 0 -3px;
-	border-left: 2px solid transparent;
-	border-right: 2px solid transparent;
+const ColumnResizeHandle = styled.div`
+	position: relative;
+	flex: 0 0 1px;
 	cursor: col-resize;
-	box-sizing: border-box;
-	background-clip: padding-box;
+	background: ${(props) => props.theme.border};
 	z-index: 1;
 	touch-action: none;
-	&:hover {
-		background: ${(props) => props.theme.border};
-	}
-`
-
-const ItemResizeHandle = styled(ResizeHandle)`
-	position: relative;
-	flex-basis: 1px;
-	margin: 0;
-	border: 0;
-	background: ${(props) => props.theme.border};
 	&::before {
 		content: '';
 		position: absolute;
@@ -118,6 +103,7 @@ const FeedToolbar = styled.div`
 	align-items: center;
 	gap: 4px;
 	padding: 0 6px;
+	background: ${(props) => props.theme.readerBar};
 	border-bottom: 1px solid ${(props) => props.theme.border};
 	box-sizing: border-box;
 `
@@ -225,6 +211,7 @@ const darkModeMediaQuery = window.matchMedia
 function App({ extensionConfig }) {
 	const [theme, setThemeState] = useState(extensionConfig.theme)
 	const maxItems = extensionConfig.maxItems
+	const autoReadTitleKeywords = extensionConfig.autoReadTitleKeywords
 	const refreshInterval = extensionConfig.refreshMinutes * 60 * 1000
 	const setTheme = (value) => {
 		setThemeState(value)
@@ -492,6 +479,38 @@ function App({ extensionConfig }) {
 	const refreshFeedCounts = () => {
 		setUpdateUnreadTrigger(feeds.map((x) => x.id))
 		setViewRevision((revision) => revision + 1)
+	}
+	const adjustUnreadCounts = (entries, direction) => {
+		const feedChanges = new Map()
+		const categoryChanges = new Map()
+		let allChange = 0
+		let starredChange = 0
+		entries.forEach((entry) => {
+			feedChanges.set(
+				entry.feed.id,
+				(feedChanges.get(entry.feed.id) || 0) + direction
+			)
+			if (entry.feed.category?.id)
+				categoryChanges.set(
+					entry.feed.category.id,
+					(categoryChanges.get(entry.feed.category.id) || 0) +
+						direction
+				)
+			allChange += direction
+			if (entry.starred) starredChange += direction
+		})
+		feeds.forEach((item) => {
+			const change =
+				item.id === -1
+					? allChange
+					: item.id === -2
+					? starredChange
+					: item.is_feed
+					? feedChanges.get(item.id) || 0
+					: categoryChanges.get(item.id) || 0
+			if (change) item.unreads = Math.max(0, item.unreads + change)
+		})
+		forceUpdate()
 	}
 	const refreshFeeds = async () => {
 		await apiCall('feeds/refresh', setError, {})
@@ -1003,7 +1022,7 @@ function App({ extensionConfig }) {
 										clearTrigger={setRenderFeedsTrigger}
 									/>
 								</FeedPane>
-								<ResizeHandle
+								<ColumnResizeHandle
 									role='separator'
 									aria-orientation='vertical'
 									aria-label='Resize feed navigation'
@@ -1032,10 +1051,12 @@ function App({ extensionConfig }) {
 								feeds={feeds}
 								onItemChange={setCurrentItem}
 								updateUnread={setUpdateUnreadTrigger}
+								adjustUnreadCounts={adjustUnreadCounts}
 								errorHandler={setError}
 								feedPaneCollapsed={feedPaneCollapsed}
 								onRestoreFeedPane={restoreFeedPane}
 								maxItems={maxItems}
+								autoReadTitleKeywords={autoReadTitleKeywords}
 								searchQuery={searchQuery}
 								searchPath={searchPath}
 								searchScopeLabel={searchScopeLabel}
@@ -1047,7 +1068,7 @@ function App({ extensionConfig }) {
 								onToggleBookmark={toggleBookmark}
 							/>
 						</ItemPane>
-						<ItemResizeHandle
+						<ColumnResizeHandle
 							role='separator'
 							aria-orientation='vertical'
 							aria-label='Resize article list'
@@ -1072,6 +1093,13 @@ function App({ extensionConfig }) {
 						<ReaderPane ref={readerRef}>
 							<ItemViewer
 								currentItem={currentItem}
+								feed={
+									feeds.find(
+										(feed) =>
+											feed.id === currentItem?.feed?.id &&
+											feed.is_feed
+									) || currentItem?.feed
+								}
 								scrollContainerRef={readerRef}
 								onFeedChange={(f) =>
 									selectFeed(feeds.find((i) => i.id === f.id))

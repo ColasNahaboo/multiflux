@@ -26,7 +26,14 @@ const storageRemove = (area, keys) =>
 
 async function loadExtensionSettings() {
 	const [syncSettings, localSettings] = await Promise.all([
-		storageGet('sync', ['url', 'password', 'refresh', 'maxItems', 'theme']),
+		storageGet('sync', [
+			'url',
+			'password',
+			'refresh',
+			'maxItems',
+			'theme',
+			'autoReadTitleKeywords',
+		]),
 		storageGet('local', ['apiToken']),
 	])
 
@@ -51,6 +58,12 @@ async function loadExtensionSettings() {
 		theme: ['auto', 'light', 'dark'].includes(syncSettings.theme)
 			? syncSettings.theme
 			: 'auto',
+		autoReadTitleKeywords: Array.isArray(syncSettings.autoReadTitleKeywords)
+			? syncSettings.autoReadTitleKeywords
+			: String(syncSettings.autoReadTitleKeywords || '')
+					.split(',')
+					.map((value) => value.trim())
+					.filter(Boolean),
 		initialSearch: new URLSearchParams(window.location.search)
 			.get('search')
 			?.trim(),

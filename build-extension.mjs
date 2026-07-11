@@ -9,6 +9,7 @@ const staticFiles = [
 	'background.js',
 	'options.html',
 	'options.js',
+	'settings-utils.js',
 ]
 
 await build()
