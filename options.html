@@ -1,99 +1,165 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <title>Miniflux Companion Options</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      max-width: 600px;
-      padding: 20px;
-    }
-    label {
-      display: block;
-      margin-top: 14px;
-      font-weight: bold;
-    }
-    input[type="text"],
-    input[type="password"],
-    input[type="number"] {
-      width: 100%;
-      box-sizing: border-box;
-    }
-    .hint {
-      font-weight: normal;
-      font-size: 0.9em;
-      color: #555;
-    }
-    .group {
-      margin-top: 16px;
-      padding-left: 10px;
-    }
-    .warning {
-      color: #b00020;
-      font-size: 0.9em;
-      margin-top: 6px;
-    }
-  </style>
-</head>
-<body>
+	<head>
+		<meta charset="utf-8" />
+		<title>Miniflux Companion Options</title>
+		<style>
+			body {
+				font-family: sans-serif;
+				max-width: 600px;
+				padding: 20px;
+			}
+			label {
+				display: block;
+				margin-top: 14px;
+				font-weight: bold;
+			}
+			input[type='text'],
+			input[type='password'],
+			input[type='number'] {
+				width: 100%;
+				box-sizing: border-box;
+			}
+			.hint {
+				font-weight: normal;
+				font-size: 0.9em;
+				color: #555;
+			}
+			.group {
+				margin-top: 16px;
+				padding-left: 10px;
+			}
+			fieldset.group {
+				border: 0;
+				margin-left: 0;
+				margin-right: 0;
+				padding-top: 0;
+				padding-right: 0;
+				padding-bottom: 0;
+			}
+			fieldset.group:disabled {
+				opacity: 0.5;
+			}
+			.settings-subgroup {
+				border: 0;
+				margin: 8px 0 0;
+				padding: 0;
+			}
+			.settings-subgroup:disabled {
+				opacity: 0.5;
+			}
+			.warning {
+				color: #b00020;
+				font-size: 0.9em;
+				margin-top: 6px;
+			}
+		</style>
+	</head>
+	<body>
+		<h2>Miniflux Companion</h2>
 
-<h2>Miniflux Companion</h2>
+		<label>
+			Miniflux URL
+			<input id="url" type="text" placeholder="https://example.com" />
+		</label>
 
-<label>
-  Miniflux URL
-  <input id="url" type="text" placeholder="https://example.com">
-</label>
+		<label>
+			API token
+			<input id="apiToken" type="password" />
+			<div class="hint">
+				Create this in Miniflux → Settings → API Keys
+			</div>
+		</label>
 
-<label>
-  API token
-  <input id="password" type="password">
-  <div class="hint">
-    Create this in Miniflux → Settings → API Keys
-  </div>
-</label>
+		<label>
+			Refresh time in minutes
+			<input id="refresh" type="number" min="1" />
+		</label>
 
-<label>
-  Refresh time in minutes
-  <input id="refresh" type="number" min="1">
-</label>
+		<label>
+			Badge text color
+			<input id="badgeTextColor" type="color" />
+		</label>
 
-<label>
-  Badge text color
-  <input id="badgeTextColor" type="color">
-</label>
+		<label>
+			Badge background color
+			<input id="badgeBgColor" type="color" />
+		</label>
 
-<label>
-  Badge background color
-  <input id="badgeBgColor" type="color">
-</label>
+		<div class="group">
+			<strong>Enhanced three-pane reader</strong>
+			<label>
+				<input type="checkbox" id="useEnhancedReader" />
+				Use enhanced three-pane reader
+			</label>
+			<div class="hint">
+				Open the bundled desktop-style reader instead of the standard
+				Miniflux web interface.
+			</div>
+			<fieldset class="settings-subgroup" id="enhancedReaderSettings">
+				<label>
+					Maximum number of items to fetch
+					<input
+						id="maxItems"
+						type="number"
+						min="10"
+						max="1000"
+						step="1"
+					/>
+				</label>
 
-<div class="group">
-  <strong>Open Miniflux to</strong><br>
-  <label><input type="radio" name="openMode" value="unread"> Unread articles</label>
-  <label><input type="radio" name="openMode" value="categories"> Categories</label>
-  <label><input type="radio" name="openMode" value="feeds"> Feeds</label>
-</div>
+				<label>
+					Theme
+					<select id="theme">
+						<option value="auto">Auto</option>
+						<option value="light">Light</option>
+						<option value="dark">Dark</option>
+					</select>
+				</label>
+			</fieldset>
+		</div>
 
-<div class="group">
-  <strong>Tab behaviour</strong><br>
-  <label><input type="radio" name="tabMode" value="new"> Always open a new tab</label>
-  <label><input type="radio" name="tabMode" value="focus"> Focus existing Miniflux tab</label>
-</div>
+		<fieldset class="group" id="openModeGroup">
+			<legend><strong>Open Miniflux to</strong></legend>
+			<label
+				><input type="radio" name="openMode" value="unread" /> Unread
+				articles</label
+			>
+			<label
+				><input type="radio" name="openMode" value="categories" />
+				Categories</label
+			>
+			<label
+				><input type="radio" name="openMode" value="feeds" />
+				Feeds</label
+			>
+		</fieldset>
 
-<div class="group">
-  <label>
-    <input type="checkbox" id="instantUpdate">
-    Update counter immediately on interaction
-  </label>
-  <div class="hint">
-    Refreshes the unread counter when you click the extension icon.
-  </div>
-</div>
+		<div class="group">
+			<strong>Tab behaviour</strong><br />
+			<label
+				><input type="radio" name="tabMode" value="new" /> Always open a
+				new tab</label
+			>
+			<label
+				><input type="radio" name="tabMode" value="focus" /> Focus
+				existing Miniflux tab</label
+			>
+		</div>
 
-<button id="save">Save</button>
-<span id="status"></span>
+		<div class="group">
+			<label>
+				<input type="checkbox" id="instantUpdate" />
+				Update counter immediately on interaction
+			</label>
+			<div class="hint">
+				Refreshes the unread counter when you click the extension icon.
+			</div>
+		</div>
 
-<script src="options.js"></script>
-</body>
+		<button id="save">Save</button>
+		<span id="status"></span>
+
+		<script src="options.js"></script>
+	</body>
 </html>
