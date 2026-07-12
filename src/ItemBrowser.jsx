@@ -5,6 +5,7 @@ import { useHotkeys } from 'react-hotkeys-hook'
 import Icon from './Icon'
 import { beginAutoRead } from '../settings-utils'
 import { bookmarkStateControlStyles } from './readStateStyles'
+import { PRIMARY_HEADER_HEIGHT } from './layout'
 
 const Favico = styled.img`
 	width: 16px;
@@ -303,7 +304,9 @@ function FeedItemList(props) {
 }
 
 const Header = styled.div`
-	height: 34px;
+	flex: 0 0 ${PRIMARY_HEADER_HEIGHT}px;
+	height: ${PRIMARY_HEADER_HEIGHT}px;
+	min-height: ${PRIMARY_HEADER_HEIGHT}px;
 	padding: 2px 8px;
 	width: 100%;
 	box-sizing: border-box;

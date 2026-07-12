@@ -11,6 +11,7 @@ import { ThemeProvider } from 'styled-components'
 import { lightTheme, darkTheme } from './themes'
 import ClickNHold from './ClickNHold'
 import Icon from './Icon'
+import { PRIMARY_HEADER_HEIGHT } from './layout'
 
 const ErrorDiv = styled.div`
 	padding: 10px;
@@ -98,7 +99,9 @@ const ColumnResizeHandle = styled.div`
 `
 
 const FeedToolbar = styled.div`
-	height: 34px;
+	flex: 0 0 ${PRIMARY_HEADER_HEIGHT}px;
+	height: ${PRIMARY_HEADER_HEIGHT}px;
+	min-height: ${PRIMARY_HEADER_HEIGHT}px;
 	display: flex;
 	align-items: center;
 	gap: 4px;

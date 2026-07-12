@@ -8,12 +8,19 @@ import FeedContextMenu, {
 	SourceTextDialog,
 } from './FeedContextMenu'
 
+const FeedBrowserLayout = styled.div`
+	flex: 1 1 auto;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+`
+
 const FeedList = styled.div`
 	flex: 1 1 auto;
 	min-height: 0;
 	overflow-y: auto;
 	overflow-x: hidden;
-	padding: 8px 0 14px;
+	padding: 0 0 14px;
 	color: ${(props) => props.theme.text};
 `
 
@@ -55,7 +62,11 @@ const FeedRow = styled.div`
 	box-sizing: border-box;
 	font-weight: ${(props) => (props.isCategory ? 500 : 400)};
 	background-color: ${(props) =>
-		props.selected ? props.theme.selectbg : 'inherit'};
+		props.selected
+			? props.theme.selectbg
+			: props.$menuOpen
+			? props.theme.hoverbg
+			: 'inherit'};
 	color: ${(props) =>
 		props.error
 			? props.theme.errorentry
@@ -77,7 +88,8 @@ const FeedRow = styled.div`
 		background: ${(props) =>
 			props.selected ? props.theme.accent : 'transparent'};
 	}
-	&:hover ${MoreButton}, ${MoreButton}:focus-visible {
+	&:hover ${MoreButton}, ${MoreButton}:focus-visible,
+	& ${MoreButton}[aria-expanded='true'] {
 		display: inline-flex;
 	}
 `
@@ -126,17 +138,29 @@ const SectionTitle = styled.div`
 `
 
 const SectionHeader = styled.div`
-	position: sticky;
-	top: 0;
-	z-index: 2;
+	position: relative;
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
 	gap: 8px;
-	margin: 4px 6px 6px;
+	height: 34px;
+	min-height: 34px;
+	margin: 0;
+	padding: 0 6px;
+	box-sizing: border-box;
 	font-size: 12px;
 	color: ${(props) => props.theme.muted};
 	background: ${(props) => props.theme.feedBody};
+	box-shadow: 0 1px 2px rgb(0 0 0 / 4%);
+	&::after {
+		content: '';
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		height: 1px;
+		background: ${(props) => props.theme.border};
+	}
 `
 
 const SectionActions = styled.div`
@@ -350,7 +374,7 @@ function FeedBrowser(props) {
 	}, [createMenuOpen])
 
 	return (
-		<FeedList>
+		<FeedBrowserLayout>
 			<SectionHeader>
 				<SectionTitle>Subscriptions</SectionTitle>
 				<SectionActions
@@ -412,194 +436,213 @@ function FeedBrowser(props) {
 					</FloatingButton>
 				</SectionActions>
 			</SectionHeader>
-			{feeds.map((item) => (
-				<div key={item.fetch_url || item.id}>
-					<FeedRow
-						tabIndex={
-							item.is_feed || (!item.fetch_url && item.id > 0)
-								? 0
-								: undefined
+			<FeedList>
+				{feeds.map((item) => (
+					<div key={item.fetch_url || item.id}>
+						<FeedRow
+							$menuOpen={
+								contextMenu?.feed.id === item.id &&
+								contextMenu?.feed.is_feed === item.is_feed
+							}
+							tabIndex={
+								item.is_feed || (!item.fetch_url && item.id > 0)
+									? 0
+									: undefined
+							}
+							ref={isSelected(item) ? selectedFeed : null}
+							isFeed={item.is_feed}
+							isCategory={!item.fetch_url}
+							selected={isSelected(item)}
+							unread={item.unreads}
+							error={item.parsing_error_count}
+							title={
+								item.parsing_error_message ||
+								'Updated ' +
+									relaTimestamp(item.checked_at) +
+									' ago'
+							}
+							onContextMenu={(event) => openFeedMenu(item, event)}
+							onClick={() => props.onFeedChange(item)}
+							onKeyDown={(event) => {
+								if (
+									event.key === 'ContextMenu' ||
+									(event.shiftKey && event.key === 'F10')
+								)
+									openFeedMenu(item, event)
+							}}
+						>
+							{!item.fetch_url &&
+								(collapsed.includes(item.id) ? (
+									<Collapse
+										title='Expand category'
+										aria-label='Expand category'
+										onPointerDown={(e) =>
+											e.stopPropagation()
+										}
+										onClick={(e) => {
+											e.stopPropagation()
+											dispatch({
+												type: 'expand',
+												category: item.id,
+											})
+										}}
+									>
+										<Icon name='chevronRight' size={16} />
+									</Collapse>
+								) : (
+									<Collapse
+										title='Collapse category'
+										aria-label='Collapse category'
+										onPointerDown={(e) =>
+											e.stopPropagation()
+										}
+										onClick={(e) => {
+											e.stopPropagation()
+											dispatch({
+												type: 'collapse',
+												category: item.id,
+											})
+										}}
+									>
+										<Icon name='chevronDown' size={16} />
+									</Collapse>
+								))}
+							{!item.is_feed && item.fetch_url && (
+								<TopIcon>
+									<Icon
+										name={
+											item.id === -1
+												? 'newspaper'
+												: 'star'
+										}
+										size={16}
+									/>
+								</TopIcon>
+							)}
+							{item.is_feed && <Favico src={item.icon_data} />}
+							<FeedTitle selected={isSelected(item)}>
+								{item.id === -1 ? 'All articles' : item.title}
+							</FeedTitle>
+							{item.unreads > 0 && (
+								<UnreadBubble>{item.unreads}</UnreadBubble>
+							)}
+							{(item.is_feed ||
+								(!item.fetch_url && item.id > 0)) && (
+								<MoreButton
+									$visible={isSelected(item)}
+									title={
+										item.is_feed
+											? 'Feed actions'
+											: 'Category actions'
+									}
+									onPointerEnter={cancelDelayedClose}
+									onPointerLeave={scheduleDelayedClose}
+									aria-label={`Actions for ${item.title}`}
+									aria-expanded={
+										contextMenu?.feed.id === item.id &&
+										!contextDialogOpen
+									}
+									aria-controls={
+										contextMenu?.feed.id === item.id &&
+										!contextDialogOpen
+											? `source-menu-${item.id}`
+											: undefined
+									}
+									onPointerDown={(event) =>
+										event.stopPropagation()
+									}
+									onClick={(event) =>
+										openFeedMenu(item, event)
+									}
+								>
+									<Icon name='more' size={16} />
+								</MoreButton>
+							)}
+						</FeedRow>
+					</div>
+				))}
+				{contextMenu && (
+					<FeedContextMenu
+						source={contextMenu.feed}
+						categories={props.feeds.filter(
+							(item) => !item.fetch_url && item.id > 0
+						)}
+						categoryFeeds={props.feeds.filter(
+							(item) =>
+								item.is_feed &&
+								item.category?.id === contextMenu.feed.id
+						)}
+						sourcesLoading={props.sourcesLoading}
+						anchor={contextMenu.anchor}
+						menuId={`source-menu-${contextMenu.feed.id}`}
+						returnFocus={contextMenu.returnFocus}
+						onClose={() => setContextMenu(null)}
+						onMarkRead={() => props.markAllRead(contextMenu.feed)}
+						onRefresh={() => props.refreshFeed(contextMenu.feed)}
+						onEdit={(values) =>
+							props.editFeed(contextMenu.feed, values)
 						}
-						ref={isSelected(item) ? selectedFeed : null}
-						isFeed={item.is_feed}
-						isCategory={!item.fetch_url}
-						selected={isSelected(item)}
-						unread={item.unreads}
-						error={item.parsing_error_count}
-						title={
-							item.parsing_error_message ||
-							'Updated ' + relaTimestamp(item.checked_at) + ' ago'
+						onDelete={() => props.deleteFeed(contextMenu.feed)}
+						onRefreshCategory={() =>
+							props.refreshCategory(contextMenu.feed)
 						}
-						onContextMenu={(event) => openFeedMenu(item, event)}
-						onClick={() => props.onFeedChange(item)}
-						onKeyDown={(event) => {
-							if (
-								event.key === 'ContextMenu' ||
-								(event.shiftKey && event.key === 'F10')
-							)
-								openFeedMenu(item, event)
+						onAddFeed={(feedUrl) =>
+							props.addFeed(contextMenu.feed, feedUrl)
+						}
+						onRenameCategory={(title) =>
+							props.renameCategory(contextMenu.feed, title)
+						}
+						onDeleteCategory={() =>
+							props.deleteCategory(contextMenu.feed)
+						}
+						onScheduleClose={scheduleDelayedClose}
+						onCancelClose={cancelDelayedClose}
+						onDialogOpen={() => setContextDialogOpen(true)}
+					/>
+				)}
+				{createDialog === 'feed' && (
+					<AddFeedDialog
+						categories={props.feeds.filter(
+							(item) => !item.fetch_url && item.id > 0
+						)}
+						onCancel={() => {
+							setCreateDialog(null)
+							createButtonRef.current?.focus()
 						}}
-					>
-						{!item.fetch_url &&
-							(collapsed.includes(item.id) ? (
-								<Collapse
-									title='Expand category'
-									aria-label='Expand category'
-									onPointerDown={(e) => e.stopPropagation()}
-									onClick={(e) => {
-										e.stopPropagation()
-										dispatch({
-											type: 'expand',
-											category: item.id,
-										})
-									}}
-								>
-									<Icon name='chevronRight' size={16} />
-								</Collapse>
-							) : (
-								<Collapse
-									title='Collapse category'
-									aria-label='Collapse category'
-									onPointerDown={(e) => e.stopPropagation()}
-									onClick={(e) => {
-										e.stopPropagation()
-										dispatch({
-											type: 'collapse',
-											category: item.id,
-										})
-									}}
-								>
-									<Icon name='chevronDown' size={16} />
-								</Collapse>
-							))}
-						{!item.is_feed && item.fetch_url && (
-							<TopIcon>
-								<Icon
-									name={item.id === -1 ? 'newspaper' : 'star'}
-									size={16}
-								/>
-							</TopIcon>
-						)}
-						{item.is_feed && <Favico src={item.icon_data} />}
-						<FeedTitle selected={isSelected(item)}>
-							{item.id === -1 ? 'All articles' : item.title}
-						</FeedTitle>
-						{item.unreads > 0 && (
-							<UnreadBubble>{item.unreads}</UnreadBubble>
-						)}
-						{(item.is_feed || (!item.fetch_url && item.id > 0)) && (
-							<MoreButton
-								$visible={isSelected(item)}
-								title={
-									item.is_feed
-										? 'Feed actions'
-										: 'Category actions'
-								}
-								onPointerEnter={cancelDelayedClose}
-								onPointerLeave={scheduleDelayedClose}
-								aria-label={`Actions for ${item.title}`}
-								aria-expanded={
-									contextMenu?.feed.id === item.id &&
-									!contextDialogOpen
-								}
-								aria-controls={
-									contextMenu?.feed.id === item.id &&
-									!contextDialogOpen
-										? `source-menu-${item.id}`
-										: undefined
-								}
-								onPointerDown={(event) =>
-									event.stopPropagation()
-								}
-								onClick={(event) => openFeedMenu(item, event)}
-							>
-								<Icon name='more' size={16} />
-							</MoreButton>
-						)}
-					</FeedRow>
-				</div>
-			))}
-			{contextMenu && (
-				<FeedContextMenu
-					source={contextMenu.feed}
-					categories={props.feeds.filter(
-						(item) => !item.fetch_url && item.id > 0
-					)}
-					categoryFeeds={props.feeds.filter(
-						(item) =>
-							item.is_feed &&
-							item.category?.id === contextMenu.feed.id
-					)}
-					sourcesLoading={props.sourcesLoading}
-					anchor={contextMenu.anchor}
-					menuId={`source-menu-${contextMenu.feed.id}`}
-					returnFocus={contextMenu.returnFocus}
-					onClose={() => setContextMenu(null)}
-					onMarkRead={() => props.markAllRead(contextMenu.feed)}
-					onRefresh={() => props.refreshFeed(contextMenu.feed)}
-					onEdit={(values) =>
-						props.editFeed(contextMenu.feed, values)
-					}
-					onDelete={() => props.deleteFeed(contextMenu.feed)}
-					onRefreshCategory={() =>
-						props.refreshCategory(contextMenu.feed)
-					}
-					onAddFeed={(feedUrl) =>
-						props.addFeed(contextMenu.feed, feedUrl)
-					}
-					onRenameCategory={(title) =>
-						props.renameCategory(contextMenu.feed, title)
-					}
-					onDeleteCategory={() =>
-						props.deleteCategory(contextMenu.feed)
-					}
-					onScheduleClose={scheduleDelayedClose}
-					onCancelClose={cancelDelayedClose}
-					onDialogOpen={() => setContextDialogOpen(true)}
-				/>
-			)}
-			{createDialog === 'feed' && (
-				<AddFeedDialog
-					categories={props.feeds.filter(
-						(item) => !item.fetch_url && item.id > 0
-					)}
-					onCancel={() => {
-						setCreateDialog(null)
-						createButtonRef.current?.focus()
-					}}
-					onSave={(feedUrl, categoryId) =>
-						props
-							.addFeed(
-								categoryId
-									? props.feeds.find(
-											(item) =>
-												item.id === categoryId &&
-												!item.fetch_url
-									  )
-									: null,
-								feedUrl
-							)
-							.then(() => setCreateDialog(null))
-					}
-				/>
-			)}
-			{createDialog === 'category' && (
-				<SourceTextDialog
-					title='Add category'
-					label='Category name'
-					submitLabel='Add category'
-					onCancel={() => {
-						setCreateDialog(null)
-						createButtonRef.current?.focus()
-					}}
-					onSave={(title) =>
-						props
-							.createCategory(title)
-							.then(() => setCreateDialog(null))
-					}
-				/>
-			)}
-		</FeedList>
+						onSave={(feedUrl, categoryId) =>
+							props
+								.addFeed(
+									categoryId
+										? props.feeds.find(
+												(item) =>
+													item.id === categoryId &&
+													!item.fetch_url
+										  )
+										: null,
+									feedUrl
+								)
+								.then(() => setCreateDialog(null))
+						}
+					/>
+				)}
+				{createDialog === 'category' && (
+					<SourceTextDialog
+						title='Add category'
+						label='Category name'
+						submitLabel='Add category'
+						onCancel={() => {
+							setCreateDialog(null)
+							createButtonRef.current?.focus()
+						}}
+						onSave={(title) =>
+							props
+								.createCategory(title)
+								.then(() => setCreateDialog(null))
+						}
+					/>
+				)}
+			</FeedList>
+		</FeedBrowserLayout>
 	)
 }
 
