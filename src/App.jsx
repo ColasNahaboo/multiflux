@@ -931,235 +931,227 @@ function App({ extensionConfig }) {
 			}
 		>
 			<GlobalStyles />
-			{helpOpen ? (
-				<KeyHelpModal onClose={() => setHelpOpen(false)} />
-			) : (
-				<div>
-					{error && (
-						<ErrorDiv>
-							API error: {String(error)}
-							<ErrorClose>
-								<button onClick={() => setError(null)}>
-									X
-								</button>
-							</ErrorClose>
-						</ErrorDiv>
-					)}
+			{helpOpen && <KeyHelpModal onClose={() => setHelpOpen(false)} />}
+			<div>
+				{error && (
+					<ErrorDiv>
+						API error: {String(error)}
+						<ErrorClose>
+							<button onClick={() => setError(null)}>X</button>
+						</ErrorClose>
+					</ErrorDiv>
+				)}
 
-					<AppLayout
-						ref={layoutRef}
-						style={{
-							'--feed-pane-width': `${feedPaneWidth}px`,
-							'--item-pane-width': `${itemPaneWidth}px`,
-						}}
-					>
-						{!feedPaneCollapsed && (
-							<>
-								<FeedPane>
-									<FeedToolbar>
+				<AppLayout
+					ref={layoutRef}
+					style={{
+						'--feed-pane-width': `${feedPaneWidth}px`,
+						'--item-pane-width': `${itemPaneWidth}px`,
+					}}
+				>
+					{!feedPaneCollapsed && (
+						<>
+							<FeedPane>
+								<FeedToolbar>
+									<FloatingButton
+										onClick={collapseFeedPane}
+										title='Collapse feed navigation'
+										aria-label='Collapse feed navigation'
+									>
+										<Icon name='menu' />
+									</FloatingButton>
+									<ToolbarSpacer />
+									<FloatingButton
+										onClick={() => setSearchOpen(true)}
+										title={`Search ${searchScopeLabel}`}
+										aria-label={`Search ${searchScopeLabel}`}
+									>
+										<Icon name='search' size={16} />
+									</FloatingButton>
+									<ClickNHold
+										time={2}
+										onClickNHold={refreshFeeds}
+										onEnd={(e, enough) => {
+											if (!enough) refreshFeedCounts()
+											e.target.blur()
+										}}
+									>
 										<FloatingButton
-											onClick={collapseFeedPane}
-											title='Collapse feed navigation'
-											aria-label='Collapse feed navigation'
+											title='Short press to refresh unread count, long press to trigger fetch and full refresh'
+											aria-label='Refresh feeds'
 										>
-											<Icon name='menu' />
+											<Icon name='refresh' />
 										</FloatingButton>
-										<ToolbarSpacer />
+									</ClickNHold>
+									<FloatingButton
+										onClick={() =>
+											chrome.runtime.openOptionsPage()
+										}
+										title='Settings'
+										aria-label='Settings'
+									>
+										<Icon name='settings' />
+									</FloatingButton>
+								</FeedToolbar>
+								{searchOpen && (
+									<SearchForm
+										onSubmit={submitSearch}
+										role='search'
+									>
+										<SearchFields>
+											<SearchScope>
+												Search {searchScopeLabel}
+											</SearchScope>
+											<SearchInput
+												ref={searchInputRef}
+												type='search'
+												value={searchInput}
+												onChange={(event) =>
+													setSearchInput(
+														event.target.value
+													)
+												}
+												onKeyDown={(event) => {
+													if (
+														event.key === 'Escape'
+													) {
+														event.preventDefault()
+														event.stopPropagation()
+														clearSearch()
+													}
+												}}
+												placeholder='Search'
+												aria-label={`Search ${searchScopeLabel}`}
+											/>
+										</SearchFields>
 										<FloatingButton
-											onClick={() => setSearchOpen(true)}
-											title={`Search ${searchScopeLabel}`}
-											aria-label={`Search ${searchScopeLabel}`}
+											type='submit'
+											title='Search articles'
+											aria-label='Search articles'
 										>
 											<Icon name='search' size={16} />
 										</FloatingButton>
-										<ClickNHold
-											time={2}
-											onClickNHold={refreshFeeds}
-											onEnd={(e, enough) => {
-												if (!enough) refreshFeedCounts()
-												e.target.blur()
-											}}
-										>
+										{searchInput && (
 											<FloatingButton
-												title='Short press to refresh unread count, long press to trigger fetch and full refresh'
-												aria-label='Refresh feeds'
+												type='button'
+												onClick={clearSearch}
+												title='Clear search'
+												aria-label='Clear search'
 											>
-												<Icon name='refresh' />
-											</FloatingButton>
-										</ClickNHold>
-										<FloatingButton
-											onClick={() =>
-												chrome.runtime.openOptionsPage()
-											}
-											title='Settings'
-											aria-label='Settings'
-										>
-											<Icon name='settings' />
-										</FloatingButton>
-									</FeedToolbar>
-									{searchOpen && (
-										<SearchForm
-											onSubmit={submitSearch}
-											role='search'
-										>
-											<SearchFields>
-												<SearchScope>
-													Search {searchScopeLabel}
-												</SearchScope>
-												<SearchInput
-													ref={searchInputRef}
-													type='search'
-													value={searchInput}
-													onChange={(event) =>
-														setSearchInput(
-															event.target.value
-														)
-													}
-													onKeyDown={(event) => {
-														if (
-															event.key ===
-															'Escape'
-														) {
-															event.preventDefault()
-															event.stopPropagation()
-															clearSearch()
-														}
-													}}
-													placeholder='Search'
-													aria-label={`Search ${searchScopeLabel}`}
+												<Icon
+													name='dismiss'
+													size={16}
 												/>
-											</SearchFields>
-											<FloatingButton
-												type='submit'
-												title='Search articles'
-												aria-label='Search articles'
-											>
-												<Icon name='search' size={16} />
 											</FloatingButton>
-											{searchInput && (
-												<FloatingButton
-													type='button'
-													onClick={clearSearch}
-													title='Clear search'
-													aria-label='Clear search'
-												>
-													<Icon
-														name='dismiss'
-														size={16}
-													/>
-												</FloatingButton>
-											)}
-										</SearchForm>
-									)}
-									<FeedBrowser
-										currentFeed={currentFeed}
-										feeds={feeds}
-										onFeedChange={selectFeed}
-										markAllRead={markAllRead}
-										refreshFeed={refreshSingleFeed}
-										editFeed={editFeed}
-										deleteFeed={deleteFeed}
-										refreshCategory={refreshCategory}
-										addFeed={addFeed}
-										createCategory={createCategory}
-										renameCategory={renameCategory}
-										deleteCategory={deleteCategory}
-										sourcesLoading={sourcesLoading}
-										errorHandler={setError}
-										updateTrigger={renderFeedsTrigger}
-										clearTrigger={setRenderFeedsTrigger}
-									/>
-								</FeedPane>
-								<ColumnResizeHandle
-									role='separator'
-									aria-orientation='vertical'
-									aria-label='Resize feed navigation'
-									aria-valuemin={FEED_MIN_WIDTH}
-									aria-valuemax={getMaxFeedWidth(
-										layoutRef.current
-											? layoutRef.current.clientWidth
-											: window.innerWidth,
-										itemPaneWidth
-									)}
-									aria-valuenow={feedPaneWidth}
-									tabIndex='0'
-									onPointerDown={(event) =>
-										startResize('feed', event)
-									}
-									onKeyDown={(event) =>
-										resizeWithKeyboard('feed', event)
-									}
+										)}
+									</SearchForm>
+								)}
+								<FeedBrowser
+									currentFeed={currentFeed}
+									feeds={feeds}
+									onFeedChange={selectFeed}
+									markAllRead={markAllRead}
+									refreshFeed={refreshSingleFeed}
+									editFeed={editFeed}
+									deleteFeed={deleteFeed}
+									refreshCategory={refreshCategory}
+									addFeed={addFeed}
+									createCategory={createCategory}
+									renameCategory={renameCategory}
+									deleteCategory={deleteCategory}
+									sourcesLoading={sourcesLoading}
+									errorHandler={setError}
+									updateTrigger={renderFeedsTrigger}
+									clearTrigger={setRenderFeedsTrigger}
 								/>
-							</>
-						)}
-						<ItemPane>
-							<ItemBrowser
-								currentFeed={currentFeed}
-								currentItem={currentItem}
-								feeds={feeds}
-								onItemChange={setCurrentItem}
-								updateUnread={setUpdateUnreadTrigger}
-								adjustUnreadCounts={adjustUnreadCounts}
-								errorHandler={setError}
-								feedPaneCollapsed={feedPaneCollapsed}
-								onRestoreFeedPane={restoreFeedPane}
-								maxItems={maxItems}
-								autoReadTitleKeywords={autoReadTitleKeywords}
-								searchQuery={searchQuery}
-								searchPath={searchPath}
-								searchScopeLabel={searchScopeLabel}
-								onClearSearch={clearSearch}
-								readReconciliation={readReconciliation}
-								viewRevision={viewRevision}
-								onSetReadState={setReadState}
-								bookmarkReconciliation={bookmarkReconciliation}
-								onToggleBookmark={toggleBookmark}
+							</FeedPane>
+							<ColumnResizeHandle
+								role='separator'
+								aria-orientation='vertical'
+								aria-label='Resize feed navigation'
+								aria-valuemin={FEED_MIN_WIDTH}
+								aria-valuemax={getMaxFeedWidth(
+									layoutRef.current
+										? layoutRef.current.clientWidth
+										: window.innerWidth,
+									itemPaneWidth
+								)}
+								aria-valuenow={feedPaneWidth}
+								tabIndex='0'
+								onPointerDown={(event) =>
+									startResize('feed', event)
+								}
+								onKeyDown={(event) =>
+									resizeWithKeyboard('feed', event)
+								}
 							/>
-						</ItemPane>
-						<ColumnResizeHandle
-							role='separator'
-							aria-orientation='vertical'
-							aria-label='Resize article list'
-							aria-valuemin={ITEM_MIN_WIDTH}
-							aria-valuemax={getMaxItemWidth(
-								layoutRef.current
-									? layoutRef.current.clientWidth
-									: window.innerWidth,
-								feedPaneWidth,
-								feedPaneCollapsed
-							)}
-							aria-valuenow={itemPaneWidth}
-							tabIndex='0'
-							onPointerDown={(event) =>
-								startResize('items', event)
-							}
-							onDoubleClick={resetItemPaneWidth}
-							onKeyDown={(event) =>
-								resizeWithKeyboard('items', event)
-							}
+						</>
+					)}
+					<ItemPane>
+						<ItemBrowser
+							currentFeed={currentFeed}
+							currentItem={currentItem}
+							feeds={feeds}
+							onItemChange={setCurrentItem}
+							updateUnread={setUpdateUnreadTrigger}
+							adjustUnreadCounts={adjustUnreadCounts}
+							errorHandler={setError}
+							feedPaneCollapsed={feedPaneCollapsed}
+							onRestoreFeedPane={restoreFeedPane}
+							maxItems={maxItems}
+							autoReadTitleKeywords={autoReadTitleKeywords}
+							searchQuery={searchQuery}
+							searchPath={searchPath}
+							searchScopeLabel={searchScopeLabel}
+							onClearSearch={clearSearch}
+							readReconciliation={readReconciliation}
+							viewRevision={viewRevision}
+							onSetReadState={setReadState}
+							bookmarkReconciliation={bookmarkReconciliation}
+							onToggleBookmark={toggleBookmark}
 						/>
-						<ReaderPane ref={readerRef}>
-							<ItemViewer
-								currentItem={currentItem}
-								feed={
-									feeds.find(
-										(feed) =>
-											feed.id === currentItem?.feed?.id &&
-											feed.is_feed
-									) || currentItem?.feed
-								}
-								scrollContainerRef={readerRef}
-								onFeedChange={(f) =>
-									selectFeed(feeds.find((i) => i.id === f.id))
-								}
-								errorHandler={setError}
-								onSetReadState={setReadState}
-								onToggleBookmark={toggleBookmark}
-							/>
-						</ReaderPane>
-					</AppLayout>
-				</div>
-			)}
+					</ItemPane>
+					<ColumnResizeHandle
+						role='separator'
+						aria-orientation='vertical'
+						aria-label='Resize article list'
+						aria-valuemin={ITEM_MIN_WIDTH}
+						aria-valuemax={getMaxItemWidth(
+							layoutRef.current
+								? layoutRef.current.clientWidth
+								: window.innerWidth,
+							feedPaneWidth,
+							feedPaneCollapsed
+						)}
+						aria-valuenow={itemPaneWidth}
+						tabIndex='0'
+						onPointerDown={(event) => startResize('items', event)}
+						onDoubleClick={resetItemPaneWidth}
+						onKeyDown={(event) =>
+							resizeWithKeyboard('items', event)
+						}
+					/>
+					<ReaderPane ref={readerRef}>
+						<ItemViewer
+							currentItem={currentItem}
+							feed={
+								feeds.find(
+									(feed) =>
+										feed.id === currentItem?.feed?.id &&
+										feed.is_feed
+								) || currentItem?.feed
+							}
+							scrollContainerRef={readerRef}
+							onFeedChange={(f) =>
+								selectFeed(feeds.find((i) => i.id === f.id))
+							}
+							errorHandler={setError}
+							onSetReadState={setReadState}
+							onToggleBookmark={toggleBookmark}
+						/>
+					</ReaderPane>
+				</AppLayout>
+			</div>
 		</ThemeProvider>
 	)
 }

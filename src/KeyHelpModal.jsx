@@ -1,5 +1,4 @@
-import React from 'react'
-import Modal from 'react-modal'
+import React, { useEffect, useRef } from 'react'
 import styled from 'styled-components'
 import { useHotkeys } from 'react-hotkeys-hook'
 
@@ -28,31 +27,17 @@ const keyMap = [
 	['Escape/Enter', 'Close this window'],
 ]
 
-const ModalAdapter = ({ className, modalClassName, ...props }) => (
-	<Modal className={modalClassName} portalClassName={className} {...props} />
-)
+const StyledDialog = styled.dialog`
+	background-color: ${(props) => props.theme.surface};
+	color: inherit;
+	border: 1px solid ${(props) => props.theme.border};
+	box-shadow: 0 12px 42px rgba(0, 0, 0, 0.18);
+	padding: 22px;
+	max-height: 86vh;
+	overflow: auto;
 
-const StyledModal = styled(ModalAdapter).attrs({
-	overlayClassName: 'Overlay',
-	modalClassName: 'Modal',
-})`
-	.Modal {
-		position: absolute;
-		top: 50%;
-		left: 50%;
-		background-color: ${(props) => props.theme.surface};
-		border: 1px solid ${(props) => props.theme.border};
-		box-shadow: 0 12px 42px rgba(0, 0, 0, 0.18);
-		padding: 22px;
-		transform: translate(-50%, -50%);
-		max-height: 86vh;
-		overflow: auto;
-	}
-	.Overlay {
-		position: fixed;
-		inset: 0;
+	&::backdrop {
 		background-color: ${(props) => props.theme.modalbg};
-		z-index: 200;
 	}
 `
 
@@ -62,10 +47,23 @@ const KeyTable = styled.table`
 `
 
 export default function KeyHelpModal({ onClose }) {
+	const dialogRef = useRef(null)
+	const previouslyFocusedRef = useRef(document.activeElement)
+
+	useEffect(() => {
+		const dialog = dialogRef.current
+		dialog.showModal()
+
+		return () => {
+			if (dialog.open) dialog.close()
+			previouslyFocusedRef.current?.focus()
+		}
+	}, [])
+
 	useHotkeys('esc, enter', onClose)
 
 	return (
-		<StyledModal isOpen ariaHideApp={false}>
+		<StyledDialog ref={dialogRef} onCancel={onClose}>
 			<h2>Keyboard shortcuts</h2>
 			<KeyTable>
 				<thead>
@@ -83,9 +81,9 @@ export default function KeyHelpModal({ onClose }) {
 					))}
 				</tbody>
 			</KeyTable>
-			<button type='button' onClick={onClose}>
+			<button type='button' onClick={onClose} autoFocus>
 				OK
 			</button>
-		</StyledModal>
+		</StyledDialog>
 	)
 }
