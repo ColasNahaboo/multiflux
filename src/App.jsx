@@ -58,7 +58,7 @@ const Pane = styled.div`
 `
 
 const FeedPane = styled(Pane)`
-	flex: 0 0 ${(props) => props.width}px;
+	flex: 0 0 var(--feed-pane-width);
 	display: flex;
 	flex-direction: column;
 	overflow: hidden;
@@ -66,7 +66,7 @@ const FeedPane = styled(Pane)`
 `
 
 const ItemPane = styled(Pane)`
-	flex: 0 0 ${(props) => props.width}px;
+	flex: 0 0 var(--item-pane-width);
 	display: flex;
 	flex-direction: column;
 	background: ${(props) => props.theme.surface};
@@ -314,12 +314,10 @@ function App({ extensionConfig }) {
 	const [, updateState] = React.useState()
 	const forceUpdate = React.useCallback(() => updateState({}), [])
 
-	// eslint-disable-next-line
-	const cache = JSON.parse(localStorage.getItem('favicons')) || {}
-
 	useEffect(() => {
 		const fetchFeeds = async () => {
 			setSourcesLoading(true)
+			const cache = JSON.parse(localStorage.getItem('favicons')) || {}
 			try {
 				const [apiFeeds, apiCategories] = await Promise.all([
 					apiCall('feeds', setError),
@@ -404,7 +402,7 @@ function App({ extensionConfig }) {
 		}
 		if (updateFeedsTrigger) fetchFeeds()
 		setUpdateFeedsTrigger(false)
-	}, [updateFeedsTrigger, cache, forceUpdate])
+	}, [updateFeedsTrigger, forceUpdate])
 
 	useEffect(() => {
 		if (refreshInterval > 0) {
@@ -513,6 +511,7 @@ function App({ extensionConfig }) {
 					: categoryChanges.get(item.id) || 0
 			if (change) item.unreads = Math.max(0, item.unreads + change)
 		})
+		setRenderFeedsTrigger(true)
 		forceUpdate()
 	}
 	const refreshFeeds = async () => {
@@ -742,12 +741,16 @@ function App({ extensionConfig }) {
 
 	const startResize = (pane, event) => {
 		event.preventDefault()
+		event.currentTarget.setPointerCapture?.(event.pointerId)
 		dragRef.current = {
 			pane,
 			startX: event.clientX,
+			pointerId: event.pointerId,
+			captureTarget: event.currentTarget,
 			feedPaneWidth,
 			itemPaneWidth,
 			feedPaneCollapsed,
+			latest: null,
 		}
 		setDragging(pane)
 	}
@@ -800,38 +803,73 @@ function App({ extensionConfig }) {
 	useEffect(() => {
 		if (!dragging) return
 
+		// Widths are written straight to the layout's CSS custom properties
+		// while dragging; React state and storage are only updated once the
+		// drag finishes, so pointermove never re-renders the app.
+		const applyWidths = (feedWidth, itemWidth) => {
+			const layout = layoutRef.current
+			if (!layout) return
+			layout.style.setProperty('--feed-pane-width', feedWidth + 'px')
+			layout.style.setProperty('--item-pane-width', itemWidth + 'px')
+		}
+
 		const move = (event) => {
-			if (!dragRef.current) return
-			const delta = event.clientX - dragRef.current.startX
-			if (dragRef.current.pane === 'feed') {
+			const drag = dragRef.current
+			if (!drag) return
+			const delta = event.clientX - drag.startX
+			const next = clampPaneWidths(
+				drag.pane === 'feed'
+					? drag.feedPaneWidth + delta
+					: drag.feedPaneWidth,
+				drag.pane === 'feed'
+					? drag.itemPaneWidth
+					: drag.itemPaneWidth + delta,
+				drag.feedPaneCollapsed
+			)
+			drag.latest = next
+			applyWidths(next.feedWidth, next.itemWidth)
+		}
+
+		const finish = (commit) => {
+			const drag = dragRef.current
+			dragRef.current = null
+			setDragging(null)
+			if (!drag) return
+			try {
+				drag.captureTarget?.releasePointerCapture?.(drag.pointerId)
+			} catch {}
+			if (commit && drag.latest) {
 				updatePaneWidths(
-					dragRef.current.feedPaneWidth + delta,
-					dragRef.current.itemPaneWidth,
-					false
+					drag.latest.feedWidth,
+					drag.latest.itemWidth,
+					drag.feedPaneCollapsed
 				)
 			} else {
-				updatePaneWidths(
-					dragRef.current.feedPaneWidth,
-					dragRef.current.itemPaneWidth + delta,
-					dragRef.current.feedPaneCollapsed
-				)
+				applyWidths(drag.feedPaneWidth, drag.itemPaneWidth)
 			}
 		}
 
-		const stop = () => {
-			dragRef.current = null
-			setDragging(null)
+		const stop = () => finish(true)
+		const cancelKey = (event) => {
+			if (event.key !== 'Escape') return
+			event.preventDefault()
+			event.stopPropagation()
+			finish(false)
 		}
 
 		document.body.classList.add('pane-resizing')
 		window.addEventListener('pointermove', move)
 		window.addEventListener('pointerup', stop)
 		window.addEventListener('pointercancel', stop)
+		window.addEventListener('blur', stop)
+		window.addEventListener('keydown', cancelKey, true)
 		return () => {
 			document.body.classList.remove('pane-resizing')
 			window.removeEventListener('pointermove', move)
 			window.removeEventListener('pointerup', stop)
 			window.removeEventListener('pointercancel', stop)
+			window.removeEventListener('blur', stop)
+			window.removeEventListener('keydown', cancelKey, true)
 		}
 		// eslint-disable-next-line
 	}, [dragging])
@@ -842,7 +880,8 @@ function App({ extensionConfig }) {
 		}
 		window.addEventListener('resize', resize)
 		return () => window.removeEventListener('resize', resize)
-	})
+		// eslint-disable-next-line
+	}, [feedPaneWidth, itemPaneWidth, feedPaneCollapsed])
 
 	useHotkeys(
 		'h',
@@ -907,10 +946,16 @@ function App({ extensionConfig }) {
 						</ErrorDiv>
 					)}
 
-					<AppLayout ref={layoutRef}>
+					<AppLayout
+						ref={layoutRef}
+						style={{
+							'--feed-pane-width': `${feedPaneWidth}px`,
+							'--item-pane-width': `${itemPaneWidth}px`,
+						}}
+					>
 						{!feedPaneCollapsed && (
 							<>
-								<FeedPane width={feedPaneWidth}>
+								<FeedPane>
 									<FeedToolbar>
 										<FloatingButton
 											onClick={collapseFeedPane}
@@ -1047,7 +1092,7 @@ function App({ extensionConfig }) {
 								/>
 							</>
 						)}
-						<ItemPane width={itemPaneWidth}>
+						<ItemPane>
 							<ItemBrowser
 								currentFeed={currentFeed}
 								currentItem={currentItem}

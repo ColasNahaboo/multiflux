@@ -271,7 +271,7 @@ function FeedBrowser(props) {
 			)
 			afterChange(e)
 		},
-		[props, feeds]
+		[feeds, props.currentFeed]
 	)
 
 	useHotkeys(
@@ -286,7 +286,7 @@ function FeedBrowser(props) {
 			)
 			afterChange(e)
 		},
-		[props, feeds]
+		[feeds, props.currentFeed]
 	)
 
 	useHotkeys('shift+u', () => toggleHideRead(), [hideRead])
@@ -317,7 +317,10 @@ function FeedBrowser(props) {
 			)
 		)
 		props.clearTrigger(false)
-	}, [props, hideRead, collapsed])
+		// props.updateTrigger re-runs the filter after unread counts are
+		// mutated in place on the existing feed objects.
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [props.feeds, props.updateTrigger, hideRead, collapsed])
 
 	const openFeedMenu = (item, event, returnFocus = event.currentTarget) => {
 		if (!(item.is_feed || (!item.fetch_url && item.id > 0))) return

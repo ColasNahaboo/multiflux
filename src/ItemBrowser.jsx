@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { apiCall, relaTimestamp, requestBadgeRefresh } from './lib/util'
 import styled from 'styled-components'
 import { useHotkeys } from 'react-hotkeys-hook'
@@ -213,6 +213,25 @@ const FeedItem = React.forwardRef((props, ref) => (
 function FeedItemList(props) {
 	const selectedItem = useRef()
 
+	// Thumbnail extraction parses the article HTML, so resolve it once per
+	// entry when the item data changes instead of on every render. Entries
+	// keep their thumbnail across reconciliations because ids are stable.
+	const thumbnailCache = useRef(new Map())
+	const thumbnails = useMemo(() => {
+		const previous = thumbnailCache.current
+		const next = new Map()
+		props.items.forEach((item) => {
+			next.set(
+				item.id,
+				previous.has(item.id)
+					? previous.get(item.id)
+					: extractThumbnail(item)
+			)
+		})
+		thumbnailCache.current = next
+		return next
+	}, [props.items])
+
 	const itemChange = (item) => {
 		if (item) {
 			props.onItemChange(item)
@@ -235,7 +254,7 @@ function FeedItemList(props) {
 				e
 			)
 		},
-		[props]
+		[props.items, props.currentIndex]
 	)
 	useHotkeys(
 		'right,n,j,space',
@@ -251,21 +270,21 @@ function FeedItemList(props) {
 				e
 			)
 		},
-		[props]
+		[props.items, props.currentIndex]
 	)
 	useHotkeys(
 		'home',
 		(e) => {
 			kbItemChange(props.items[0], e)
 		},
-		[props]
+		[props.items, props.currentIndex]
 	)
 	useHotkeys(
 		'end',
 		(e) => {
 			kbItemChange(props.items[props.items.length - 1], e)
 		},
-		[props]
+		[props.items, props.currentIndex]
 	)
 	useHotkeys(
 		'm',
@@ -276,7 +295,7 @@ function FeedItemList(props) {
 					props.items[props.currentIndex].status === 'unread'
 				)
 		},
-		[props]
+		[props.items, props.currentIndex]
 	)
 
 	return (
@@ -287,7 +306,7 @@ function FeedItemList(props) {
 					ref={props.currentItem === item ? selectedItem : null}
 					item={item}
 					selected={props.currentItem === item}
-					thumbnail={extractThumbnail(item)}
+					thumbnail={thumbnails.get(item.id)}
 					showSource={props.showSource}
 					feed={
 						props.feeds.find(
