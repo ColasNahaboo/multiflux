@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { formatDate } from './lib/util'
 import styled from 'styled-components'
 import { useHotkeys } from 'react-hotkeys-hook'
@@ -217,6 +217,20 @@ const ActionButton = styled.button`
 		cursor: pointer;
 		color: ${(props) => props.theme.text};
 	}
+	&:disabled {
+		cursor: default;
+		opacity: 0.45;
+	}
+`
+
+const ShareIcon = styled.span`
+	display: block;
+	width: 16px;
+	height: 16px;
+	background-color: ${(props) =>
+		props.$active ? props.theme.accent : props.theme.muted};
+	-webkit-mask: url(${(props) => props.$src}) center / 16px 16px no-repeat;
+	mask: url(${(props) => props.$src}) center / 16px 16px no-repeat;
 `
 
 const ReadStateAction = styled(ActionButton)`
@@ -243,12 +257,29 @@ const getCommentsUrl = (item) => {
 	return commentsUrl
 }
 
+const getOriginalUrl = (item) => {
+	if (typeof item?.url !== 'string') return null
+
+	try {
+		const originalUrl = item.url.trim()
+		const url = new URL(originalUrl)
+		return url.protocol === 'http:' || url.protocol === 'https:'
+			? originalUrl
+			: null
+	} catch {
+		return null
+	}
+}
+
 function ItemViewer(props) {
 	const item = props.currentItem
 	const feed = props.feed || item?.feed
 	const commentsUrl = getCommentsUrl(item)
+	const originalUrl = getOriginalUrl(item)
 	const topRef = useRef()
 	const articleScrollRef = useRef()
+	const shareFeedbackTimersRef = useRef({})
+	const [activeShareControls, setActiveShareControls] = useState({})
 
 	useHotkeys('f', () => toggleStar(), [item])
 	useHotkeys('v', () => item && window.open(item.url, '_blank'), [item])
@@ -277,6 +308,53 @@ function ItemViewer(props) {
 	useEffect(() => {
 		if (articleScrollRef.current) articleScrollRef.current.scrollTop = 0
 	}, [props.currentItem])
+
+	useEffect(
+		() => () => {
+			Object.values(shareFeedbackTimersRef.current).forEach((timer) =>
+				window.clearTimeout(timer)
+			)
+		},
+		[]
+	)
+
+	const showShareFeedback = (control) => {
+		window.clearTimeout(shareFeedbackTimersRef.current[control])
+		setActiveShareControls((current) => ({ ...current, [control]: true }))
+		shareFeedbackTimersRef.current[control] = window.setTimeout(() => {
+			setActiveShareControls((current) => ({
+				...current,
+				[control]: false,
+			}))
+		}, 2000)
+	}
+	const shareOnTelegram = () => {
+		if (!originalUrl) return
+		window.location.href = `tg://msg_url?url=${encodeURIComponent(
+			originalUrl
+		)}&text=${encodeURIComponent(item.title || '')}`
+		showShareFeedback('telegram')
+	}
+	const shareByEmail = () => {
+		if (!originalUrl) return
+		const title = item.title || ''
+		const mailtoUrl = `mailto:?subject=${encodeURIComponent(
+			title
+		)}&body=${encodeURIComponent(`${title}\n\n${originalUrl}`)}`
+		window.open(mailtoUrl, '_blank', 'noopener,noreferrer')
+		showShareFeedback('email')
+	}
+	const copyTitleAndLink = async () => {
+		if (!originalUrl) return
+		try {
+			await navigator.clipboard.writeText(
+				`${item.title || ''}\n${originalUrl}`
+			)
+			showShareFeedback('copy')
+		} catch (error) {
+			console.warn('Unable to copy article title and link', error)
+		}
+	}
 
 	const toggleStar = async () => {
 		if (item) await props.onToggleBookmark(item)
@@ -333,6 +411,42 @@ function ItemViewer(props) {
 					</ItemMeta>
 				</HeaderContent>
 				<HeaderActions>
+					<ActionButton
+						title='Share via Telegram'
+						aria-label='Share via Telegram'
+						disabled={!originalUrl}
+						onClick={shareOnTelegram}
+					>
+						<ShareIcon
+							$src='./icons/telegram-16.png'
+							$active={activeShareControls.telegram}
+							aria-hidden='true'
+						/>
+					</ActionButton>
+					<ActionButton
+						title='Share via email'
+						aria-label='Share via email'
+						disabled={!originalUrl}
+						onClick={shareByEmail}
+					>
+						<ShareIcon
+							$src='./icons/email-16.png'
+							$active={activeShareControls.email}
+							aria-hidden='true'
+						/>
+					</ActionButton>
+					<ActionButton
+						title='Copy title and link'
+						aria-label='Copy article title and link'
+						disabled={!originalUrl}
+						onClick={copyTitleAndLink}
+					>
+						<ShareIcon
+							$src='./icons/copy-title-link-16.png'
+							$active={activeShareControls.copy}
+							aria-hidden='true'
+						/>
+					</ActionButton>
 					<ReadStateAction
 						$isRead={item.status !== 'unread'}
 						title={
@@ -349,15 +463,6 @@ function ItemViewer(props) {
 					>
 						<Icon name='checkCircle' size={16} />
 					</ReadStateAction>
-					{commentsUrl && (
-						<ActionButton
-							title='Open comments link'
-							aria-label='Open comments link'
-							onClick={() => window.open(commentsUrl, '_blank')}
-						>
-							<Icon name='comments' />
-						</ActionButton>
-					)}
 					<BookmarkAction
 						$starred={Boolean(item.starred)}
 						title={item.starred ? 'Unstar article' : 'Star article'}
@@ -368,6 +473,15 @@ function ItemViewer(props) {
 					>
 						<Icon name='star' />
 					</BookmarkAction>
+					{commentsUrl && (
+						<ActionButton
+							title='Open comments link'
+							aria-label='Open comments link'
+							onClick={() => window.open(commentsUrl, '_blank')}
+						>
+							<Icon name='comments' />
+						</ActionButton>
+					)}
 				</HeaderActions>
 			</ItemHeader>
 			<ArticleScroll ref={articleScrollRef}>
