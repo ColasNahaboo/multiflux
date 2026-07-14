@@ -1,3 +1,5 @@
+import { migrateSyncStorageToLocal } from './storage-utils.js'
+
 const ALARM_NAME = 'miniflux-refresh'
 const DEFAULT_REFRESH_MINUTES = 5
 const MINIMUM_REFRESH_MINUTES = 1
@@ -13,7 +15,7 @@ console.info('Miniflux Companion service worker started')
 
 async function getSettings() {
 	return new Promise((resolve) => {
-		chrome.storage.sync.get(
+		chrome.storage.local.get(
 			[
 				'url',
 				'refresh',
@@ -33,19 +35,7 @@ async function getSettings() {
 }
 
 async function getApiToken() {
-	const [localData, syncData] = await Promise.all([
-		chrome.storage.local.get('apiToken'),
-		chrome.storage.sync.get('password'),
-	])
-
-	let apiToken = localData.apiToken
-	if (!apiToken && syncData.password) {
-		await chrome.storage.local.set({ apiToken: syncData.password })
-		apiToken = syncData.password
-		await chrome.storage.sync.remove('password')
-		console.info('Legacy API token migrated to local storage')
-	}
-
+	const { apiToken } = await chrome.storage.local.get('apiToken')
 	return apiToken
 }
 
@@ -126,6 +116,7 @@ async function updateBadge() {
 
 async function initializeServiceWorker() {
 	try {
+		await migrateSyncStorageToLocal()
 		await resetAlarm()
 		await updateBadge()
 	} catch (err) {
@@ -150,19 +141,11 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 })
 
 chrome.storage.onChanged.addListener((changes, areaName) => {
-	if (areaName === 'sync' && changes.refresh) resetAlarm()
+	if (areaName !== 'local') return
+	if (changes.refresh) resetAlarm()
 
-	const relevantSyncChanges = [
-		'url',
-		'password',
-		'badgeTextColor',
-		'badgeBgColor',
-	]
-	if (
-		(areaName === 'sync' &&
-			relevantSyncChanges.some((key) => changes[key])) ||
-		(areaName === 'local' && changes.apiToken)
-	) {
+	const relevantLocalChanges = ['url', 'badgeTextColor', 'badgeBgColor']
+	if (relevantLocalChanges.some((key) => changes[key]) || changes.apiToken) {
 		updateBadge()
 	}
 })

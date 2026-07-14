@@ -4,6 +4,7 @@ import {
 	parseKeywords,
 	testMinifluxConnection,
 } from './settings-utils.js'
+import { migrateSyncStorageToLocal } from './storage-utils.js'
 
 const fields = Object.keys(DEFAULT_SETTINGS)
 const byId = (id) => document.getElementById(id)
@@ -21,9 +22,6 @@ const storageSet = (area, values) =>
 				: resolve()
 		)
 	)
-const storageRemove = (area, keys) =>
-	new Promise((resolve) => chrome.storage[area].remove(keys, resolve))
-
 function requestBackgroundRefresh() {
 	chrome.runtime.sendMessage(
 		{ type: 'refreshBadge', resetAlarm: true },
@@ -118,23 +116,15 @@ function applySettings(settings, apiToken = byId('apiToken').value) {
 }
 
 async function load() {
-	const [sync, local] = await Promise.all([
-		storageGet('sync', [...fields, 'password']),
-		storageGet('local', ['apiToken', 'account']),
-	])
-	let token = local.apiToken || sync.password || ''
-	if (!local.apiToken && sync.password) {
-		await storageSet('local', { apiToken: sync.password })
-		await storageRemove('sync', 'password')
-	} else if (local.apiToken && sync.password)
-		await storageRemove('sync', 'password')
+	await migrateSyncStorageToLocal()
+	const local = await storageGet('local', [...fields, 'apiToken', 'account'])
 	applySettings(
 		{
 			...DEFAULT_SETTINGS,
-			...sync,
-			autoReadTitleKeywords: parseKeywords(sync.autoReadTitleKeywords),
+			...local,
+			autoReadTitleKeywords: parseKeywords(local.autoReadTitleKeywords),
 		},
-		token
+		local.apiToken || ''
 	)
 	if (local.account) showAccount(local.account)
 	const releaseVersion = chrome.runtime.getManifest().version
@@ -238,10 +228,7 @@ byId('save').addEventListener('click', async () => {
 		})
 		if (!granted)
 			throw new Error('Permission denied. Cannot connect to Miniflux.')
-		const { apiToken, ...syncSettings } = settings
-		await storageSet('local', { apiToken })
-		await storageSet('sync', syncSettings)
-		await storageRemove('sync', 'password')
+		await storageSet('local', settings)
 		byId('url').value = settings.url
 		initialSnapshot = snapshot()
 		markDirty()

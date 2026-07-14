@@ -2,65 +2,41 @@ import React from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
 import { configureRuntime } from './runtimeConfig'
+import { migrateSyncStorageToLocal } from '../storage-utils.js'
 
 const root = createRoot(document.getElementById('root'))
 
 const storageGet = (area, keys) =>
 	new Promise((resolve) => chrome.storage[area].get(keys, resolve))
 
-const storageSet = (area, values) =>
-	new Promise((resolve, reject) =>
-		chrome.storage[area].set(values, () => {
-			if (chrome.runtime.lastError) reject(chrome.runtime.lastError)
-			else resolve()
-		})
-	)
-
-const storageRemove = (area, keys) =>
-	new Promise((resolve, reject) =>
-		chrome.storage[area].remove(keys, () => {
-			if (chrome.runtime.lastError) reject(chrome.runtime.lastError)
-			else resolve()
-		})
-	)
-
 async function loadExtensionSettings() {
-	const [syncSettings, localSettings] = await Promise.all([
-		storageGet('sync', [
-			'url',
-			'password',
-			'refresh',
-			'maxItems',
-			'theme',
-			'autoReadTitleKeywords',
-		]),
-		storageGet('local', ['apiToken']),
+	await migrateSyncStorageToLocal()
+	const localSettings = await storageGet('local', [
+		'url',
+		'apiToken',
+		'refresh',
+		'maxItems',
+		'theme',
+		'autoReadTitleKeywords',
 	])
-
-	let apiToken = localSettings.apiToken
-	if (!apiToken && syncSettings.password) {
-		await storageSet('local', { apiToken: syncSettings.password })
-		apiToken = syncSettings.password
-	}
-	if (apiToken && syncSettings.password) {
-		await storageRemove('sync', 'password')
-	}
 
 	return {
 		extensionMode: true,
-		server: syncSettings.url || '',
-		apiToken: apiToken || '',
+		server: localSettings.url || '',
+		apiToken: localSettings.apiToken || '',
 		maxItems: Math.min(
 			1000,
-			Math.max(10, Math.round(Number(syncSettings.maxItems) || 100))
+			Math.max(10, Math.round(Number(localSettings.maxItems) || 100))
 		),
-		refreshMinutes: Number(syncSettings.refresh) || 0,
-		theme: ['auto', 'light', 'dark'].includes(syncSettings.theme)
-			? syncSettings.theme
+		refreshMinutes: Number(localSettings.refresh) || 0,
+		theme: ['auto', 'light', 'dark'].includes(localSettings.theme)
+			? localSettings.theme
 			: 'auto',
-		autoReadTitleKeywords: Array.isArray(syncSettings.autoReadTitleKeywords)
-			? syncSettings.autoReadTitleKeywords
-			: String(syncSettings.autoReadTitleKeywords || '')
+		autoReadTitleKeywords: Array.isArray(
+			localSettings.autoReadTitleKeywords
+		)
+			? localSettings.autoReadTitleKeywords
+			: String(localSettings.autoReadTitleKeywords || '')
 					.split(',')
 					.map((value) => value.trim())
 					.filter(Boolean),

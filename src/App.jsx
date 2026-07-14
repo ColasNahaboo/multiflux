@@ -218,7 +218,7 @@ function App({ extensionConfig }) {
 	const refreshInterval = extensionConfig.refreshMinutes * 60 * 1000
 	const setTheme = (value) => {
 		setThemeState(value)
-		chrome.storage.sync.set({ theme: value })
+		chrome.storage.local.set({ theme: value })
 	}
 
 	const [error, setError] = useState()

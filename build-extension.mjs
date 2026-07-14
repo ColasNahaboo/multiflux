@@ -10,6 +10,7 @@ const staticFiles = [
 	'options.html',
 	'options.js',
 	'settings-utils.js',
+	'storage-utils.js',
 ]
 
 await build()
