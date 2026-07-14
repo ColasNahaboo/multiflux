@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Miniflux Companion",
   "description": "Unread badge and optional three-pane reader for your self-hosted Miniflux server.",
-  "version": "2.6.1",
+  "version": "2.7.0",
 
   "icons": {
     "16": "icons/icon16.png",
