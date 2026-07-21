@@ -245,7 +245,7 @@ function FeedItemList(props) {
 		e.preventDefault()
 	}
 	useHotkeys(
-		'left,p,k',
+		'left,p,k,q',
 		(e) => {
 			kbItemChange(
 				props.items[
@@ -257,7 +257,7 @@ function FeedItemList(props) {
 		[props.items, props.currentIndex]
 	)
 	useHotkeys(
-		'right,n,j,space',
+		'right,n,j,space,e',
 		(e) => {
 			kbItemChange(
 				props.items[
