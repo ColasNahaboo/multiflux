@@ -12,21 +12,8 @@ let keywords = []
 let initialSnapshot = ''
 let loading = true
 
-const storageGet = (area, keys) =>
-	new Promise((resolve) => chrome.storage[area].get(keys, resolve))
-const storageSet = (area, values) =>
-	new Promise((resolve, reject) =>
-		chrome.storage[area].set(values, () =>
-			chrome.runtime.lastError
-				? reject(chrome.runtime.lastError)
-				: resolve()
-		)
-	)
 function requestBackgroundRefresh() {
-	chrome.runtime.sendMessage(
-		{ type: 'refreshBadge', resetAlarm: true },
-		() => void chrome.runtime.lastError
-	)
+	browser.runtime.sendMessage({ type: 'refreshBadge', resetAlarm: true }).catch(() => {})
 }
 
 function updateReaderModeState() {
@@ -117,7 +104,7 @@ function applySettings(settings, apiToken = byId('apiToken').value) {
 
 async function load() {
 	await migrateSyncStorageToLocal()
-	const local = await storageGet('local', [...fields, 'apiToken', 'account'])
+	const local = await browser.storage.local.get([...fields, 'apiToken', 'account'])
 	applySettings(
 		{
 			...DEFAULT_SETTINGS,
@@ -127,7 +114,7 @@ async function load() {
 		local.apiToken || ''
 	)
 	if (local.account) showAccount(local.account)
-	const releaseVersion = chrome.runtime.getManifest().version
+	const releaseVersion = browser.runtime.getManifest().version
 	byId('version').textContent = `Version ${releaseVersion}`
 	loading = false
 	initialSnapshot = snapshot()
@@ -180,7 +167,7 @@ byId('testConnection').addEventListener('click', async () => {
 	try {
 		const normalized = normalizeServerUrl(byId('url').value)
 		const origin = `${new URL(normalized).origin}/*`
-		const granted = await chrome.permissions.request({ origins: [origin] })
+		const granted = await browser.permissions.request({ origins: [origin] })
 		if (!granted)
 			throw new Error('Permission denied. Cannot connect to Miniflux.')
 		const account = await testMinifluxConnection(
@@ -188,7 +175,7 @@ byId('testConnection').addEventListener('click', async () => {
 			byId('apiToken').value
 		)
 		byId('url').value = normalized
-		await storageSet('local', { account })
+		await browser.storage.local.set({ account })
 		showAccount(account)
 		markDirty()
 	} catch (error) {
@@ -223,12 +210,12 @@ byId('save').addEventListener('click', async () => {
 				'Maximum items must be an integer between 10 and 1000.'
 			)
 		settings.url = normalizeServerUrl(settings.url)
-		const granted = await chrome.permissions.request({
+		const granted = await browser.permissions.request({
 			origins: [`${new URL(settings.url).origin}/*`],
 		})
 		if (!granted)
 			throw new Error('Permission denied. Cannot connect to Miniflux.')
-		await storageSet('local', settings)
+		await browser.storage.local.set(settings)
 		byId('url').value = settings.url
 		initialSnapshot = snapshot()
 		markDirty()

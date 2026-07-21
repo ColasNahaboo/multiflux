@@ -218,7 +218,7 @@ function App({ extensionConfig }) {
 	const refreshInterval = extensionConfig.refreshMinutes * 60 * 1000
 	const setTheme = (value) => {
 		setThemeState(value)
-		chrome.storage.local.set({ theme: value })
+		browser.storage.local.set({ theme: value })
 	}
 
 	const [error, setError] = useState()
@@ -985,7 +985,7 @@ function App({ extensionConfig }) {
 									</ClickNHold>
 									<FloatingButton
 										onClick={() =>
-											chrome.runtime.openOptionsPage()
+											browser.runtime.openOptionsPage()
 										}
 										title='Settings'
 										aria-label='Settings'

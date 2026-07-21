@@ -13,29 +13,24 @@ console.info('Miniflux Companion service worker started')
 
 /* ---------------- settings ---------------- */
 
-async function getSettings() {
-	return new Promise((resolve) => {
-		chrome.storage.local.get(
-			[
-				'url',
-				'refresh',
-				'badgeTextColor',
-				'badgeBgColor',
-				'openMode',
-				'tabMode',
-				'instantUpdate',
-				'useEnhancedReader',
-				'maxItems',
-				'theme',
-				'autoReadTitleKeywords',
-			],
-			resolve
-		)
-	})
+function getSettings() {
+	return browser.storage.local.get([
+		'url',
+		'refresh',
+		'badgeTextColor',
+		'badgeBgColor',
+		'openMode',
+		'tabMode',
+		'instantUpdate',
+		'useEnhancedReader',
+		'maxItems',
+		'theme',
+		'autoReadTitleKeywords',
+	])
 }
 
 async function getApiToken() {
-	const { apiToken } = await chrome.storage.local.get('apiToken')
+	const { apiToken } = await browser.storage.local.get('apiToken')
 	return apiToken
 }
 
@@ -50,8 +45,8 @@ async function resetAlarm() {
 			? requestedMinutes
 			: DEFAULT_REFRESH_MINUTES
 	)
-	await chrome.alarms.clear(ALARM_NAME)
-	await chrome.alarms.create(ALARM_NAME, {
+	await browser.alarms.clear(ALARM_NAME)
+	await browser.alarms.create(ALARM_NAME, {
 		periodInMinutes,
 	})
 }
@@ -73,7 +68,7 @@ async function updateBadge() {
 		})
 
 		if (!url || !apiToken) {
-			await chrome.action.setBadgeText({ text: '' })
+			await browser.action.setBadgeText({ text: '' })
 			console.info('Badge text applied', { text: '' })
 			return
 		}
@@ -102,15 +97,15 @@ async function updateBadge() {
 		console.info('Unread count received', { unread })
 
 		const badgeText = unread > 0 ? String(unread) : ''
-		await chrome.action.setBadgeBackgroundColor({ color: badgeBgColor })
-		await chrome.action.setBadgeTextColor({ color: badgeTextColor })
-		await chrome.action.setBadgeText({ text: badgeText })
+		await browser.action.setBadgeBackgroundColor({ color: badgeBgColor })
+		await browser.action.setBadgeTextColor({ color: badgeTextColor })
+		await browser.action.setBadgeText({ text: badgeText })
 		console.info('Badge text applied', { text: badgeText })
 	} catch (err) {
 		console.error('Miniflux badge request/runtime error:', err)
-		await chrome.action.setBadgeBackgroundColor({ color: '#b00020' })
-		await chrome.action.setBadgeTextColor({ color: '#ffffff' })
-		await chrome.action.setBadgeText({ text: '!' })
+		await browser.action.setBadgeBackgroundColor({ color: '#b00020' })
+		await browser.action.setBadgeTextColor({ color: '#ffffff' })
+		await browser.action.setBadgeText({ text: '!' })
 	}
 }
 
@@ -126,21 +121,21 @@ async function initializeServiceWorker() {
 
 /* ---------------- lifecycle ---------------- */
 
-chrome.runtime.onInstalled.addListener(() => {
+browser.runtime.onInstalled.addListener(() => {
 	initializeServiceWorker()
 })
 
-chrome.runtime.onStartup.addListener(() => {
+browser.runtime.onStartup.addListener(() => {
 	initializeServiceWorker()
 })
 
-chrome.alarms.onAlarm.addListener((alarm) => {
+browser.alarms.onAlarm.addListener((alarm) => {
 	if (alarm.name === ALARM_NAME) {
 		updateBadge()
 	}
 })
 
-chrome.storage.onChanged.addListener((changes, areaName) => {
+browser.storage.onChanged.addListener((changes, areaName) => {
 	if (areaName !== 'local') return
 	if (changes.refresh) resetAlarm()
 
@@ -150,7 +145,7 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
 	}
 })
 
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 	if (message?.type !== BADGE_REFRESH_MESSAGE) return false
 
 	resetAlarmWithNextBadgeRefresh ||= Boolean(message.resetAlarm)
@@ -180,7 +175,7 @@ initializeServiceWorker()
 
 /* ---------------- click behavior ---------------- */
 
-chrome.action.onClicked.addListener(async () => {
+browser.action.onClicked.addListener(async () => {
 	const {
 		url,
 		openMode = 'unread',
@@ -193,7 +188,7 @@ chrome.action.onClicked.addListener(async () => {
 	let focusUrl
 
 	if (useEnhancedReader) {
-		targetUrl = chrome.runtime.getURL('index.html')
+		targetUrl = browser.runtime.getURL('index.html')
 		focusUrl = targetUrl
 	} else {
 		if (!url) return
@@ -208,17 +203,17 @@ chrome.action.onClicked.addListener(async () => {
 	}
 
 	if (tabMode === 'focus') {
-		const tabs = await chrome.tabs.query({ url: focusUrl })
+		const tabs = await browser.tabs.query({ url: focusUrl })
 		if (tabs.length > 0) {
-			await chrome.tabs.update(tabs[0].id, { active: true })
-			await chrome.windows.update(tabs[0].windowId, { focused: true })
+			await browser.tabs.update(tabs[0].id, { active: true })
+			await browser.windows.update(tabs[0].windowId, { focused: true })
 
 			if (instantUpdate) updateBadge()
 			return
 		}
 	}
 
-	chrome.tabs.create({ url: targetUrl })
+	browser.tabs.create({ url: targetUrl })
 
 	if (instantUpdate) updateBadge()
 })

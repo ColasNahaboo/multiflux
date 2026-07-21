@@ -1,8 +1,17 @@
 {
   "manifest_version": 3,
-  "name": "Miniflux Companion",
+  "name": "Threeflux",
   "description": "Unread badge and optional three-pane reader for your self-hosted Miniflux server.",
   "version": "2.7.1",
+
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "threeflux@example.com",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  },
 
   "icons": {
     "16": "icons/icon16.png",
@@ -13,7 +22,7 @@
   },
 
   "action": {
-    "default_title": "Miniflux Companion",
+    "default_title": "Threeflux",
     "default_icon": {
       "16": "icons/icon16.png",
       "32": "icons/icon32.png",
@@ -24,6 +33,7 @@
   },
 
   "background": {
+    "scripts": ["background.js"],
     "service_worker": "background.js",
     "type": "module"
   },

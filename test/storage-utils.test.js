@@ -7,35 +7,26 @@ const makeArea = (initial = {}, setError = null) => {
 	const values = { ...initial }
 	return {
 		values,
-		get(keys, callback) {
-			if (keys === null) {
-				callback({ ...values })
-				return
-			}
-			callback(
-				Object.fromEntries(
-					keys
-						.filter((key) => Object.hasOwn(values, key))
-						.map((key) => [key, values[key]])
-				)
+		async get(keys) {
+			if (keys === null) return { ...values }
+			return Object.fromEntries(
+				keys
+					.filter((key) => Object.hasOwn(values, key))
+					.map((key) => [key, values[key]])
 			)
 		},
-		set(updates, callback) {
-			globalThis.chrome.runtime.lastError = setError
-			if (!setError) Object.assign(values, updates)
-			callback()
-			globalThis.chrome.runtime.lastError = null
+		async set(updates) {
+			if (setError) throw setError
+			Object.assign(values, updates)
 		},
-		remove(keys, callback) {
+		async remove(keys) {
 			for (const key of keys) delete values[key]
-			callback()
 		},
 	}
 }
 
-const configureChrome = (sync, local) => {
-	globalThis.chrome = {
-		runtime: { lastError: null },
+const configureBrowser = (sync, local) => {
+	globalThis.browser = {
 		storage: { sync, local },
 	}
 }
@@ -47,7 +38,7 @@ test('migrates all synchronized settings without replacing local values', async 
 		futurePreference: true,
 	})
 	const local = makeArea({ url: 'https://local.example' })
-	configureChrome(sync, local)
+	configureBrowser(sync, local)
 
 	await migrateSyncStorageToLocal()
 
@@ -62,7 +53,7 @@ test('migrates all synchronized settings without replacing local values', async 
 test('migrates the legacy password to a local API token', async () => {
 	const sync = makeArea({ password: 'legacy-secret' })
 	const local = makeArea()
-	configureChrome(sync, local)
+	configureBrowser(sync, local)
 
 	await migrateSyncStorageToLocal()
 
@@ -73,7 +64,7 @@ test('migrates the legacy password to a local API token', async () => {
 test('does not remove synchronized values when the local write fails', async () => {
 	const sync = makeArea({ url: 'https://news.example' })
 	const local = makeArea({}, new Error('local storage unavailable'))
-	configureChrome(sync, local)
+	configureBrowser(sync, local)
 
 	await assert.rejects(
 		migrateSyncStorageToLocal(),

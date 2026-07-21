@@ -6,12 +6,9 @@ import { migrateSyncStorageToLocal } from '../storage-utils.js'
 
 const root = createRoot(document.getElementById('root'))
 
-const storageGet = (area, keys) =>
-	new Promise((resolve) => chrome.storage[area].get(keys, resolve))
-
 async function loadExtensionSettings() {
 	await migrateSyncStorageToLocal()
-	const localSettings = await storageGet('local', [
+	const localSettings = await browser.storage.local.get([
 		'url',
 		'apiToken',
 		'refresh',
@@ -61,7 +58,7 @@ function MissingSettings() {
 			</p>
 			<button
 				type='button'
-				onClick={() => chrome.runtime.openOptionsPage()}
+				onClick={() => browser.runtime.openOptionsPage()}
 			>
 				Open extension settings
 			</button>
@@ -76,7 +73,7 @@ function StorageError() {
 			<p>Reload the extension and try opening the reader again.</p>
 			<button
 				type='button'
-				onClick={() => chrome.runtime.openOptionsPage()}
+				onClick={() => browser.runtime.openOptionsPage()}
 			>
 				Open extension settings
 			</button>

@@ -3,7 +3,7 @@ import dayjs from 'dayjs'
 import { getRuntimeConfig } from '../runtimeConfig'
 
 export function requestBadgeRefresh() {
-	chrome.runtime.sendMessage({ type: 'refreshBadge' }).catch((error) => {
+	browser.runtime.sendMessage({ type: 'refreshBadge' }).catch((error) => {
 		console.error('Could not request unread badge refresh:', error)
 	})
 }
