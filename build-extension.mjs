@@ -20,10 +20,14 @@ async function readManifest() {
 	return JSON.parse(await readFile(path.join(rootDir, 'manifest.json'), 'utf8'))
 }
 
+async function readVersionName() {
+	const pkg = JSON.parse(await readFile(path.join(rootDir, 'package.json'), 'utf8'))
+	return pkg.version
+}
+
 async function writeChromeManifest(manifest, outDir) {
 	const chrome = JSON.parse(JSON.stringify(manifest))
 	for (const key of firefoxOnly) delete chrome[key]
-	if (chrome.version_name) delete chrome.version_name
 	if (chrome.background?.scripts) delete chrome.background.scripts
 	await writeFile(
 		path.join(outDir, 'manifest.json'),
@@ -66,14 +70,14 @@ async function packageExtension(outDir, label, versionName) {
 	const outputDir = path.join(rootDir, 'web-ext-artifacts')
 	await mkdir(outputDir, { recursive: true })
 	const filename = `threeflux-${versionName}-${label}.zip`
-	execSync(`npx web-ext build --source-dir=${outDir} --filename=${filename}`, {
+	execSync(`npx web-ext build --source-dir=${outDir} --filename=${filename} --overwrite-dest`, {
 		stdio: 'inherit',
 	})
 }
 
 async function buildTarget(label) {
 	const manifest = await readManifest()
-	const versionName = manifest.version_name || manifest.version
+	const versionName = await readVersionName()
 	const distDir = path.join(rootDir, `dist-${label}`)
 
 	console.log(`\n=== Building Threeflux for ${label.toUpperCase()} ===`)

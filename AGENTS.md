@@ -79,11 +79,10 @@ Dual-version scheme to avoid merge conflicts with upstream tags:
 | File | Field | Example | Format |
 |---|---|---|---|
 | `manifest.json` | `version` | `2.7.1.1` | Dot-numbers only (Firefox/AMO requirement). 4th segment = our revision counter. |
-| `manifest.json` | `version_name` | `2.7.1-3f.1` | Freeform label shown in `about:addons`. |
-| `package.json` | `version` | `2.7.1-3f.1` | npm semver with `-3f` prerelease tag. |
+| `package.json` | `version` | `2.7.1-3f.1` | npm semver with `-3f` prerelease tag. Used as `version_name` for packaging. |
 | `package-lock.json` | `version` | `2.7.1-3f.1` | Same as package.json. |
 
-- `npm run package` reads `version_name` from manifest.json and names the output `threeflux-{version_name}.zip`
+- `npm run package` reads `version` from package.json and names the output `threeflux-{version_name}.zip`
 - Git tags use `v2.7.1-3f.N` format
 - Increment only the last segment: `2.7.1-3f.1` → `2.7.1-3f.2` (manifest `version` → `2.7.1.2`)
 - Upstream uses 3-segment tags (`v2.7.1`), so no collision
