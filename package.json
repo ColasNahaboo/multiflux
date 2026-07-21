@@ -5,12 +5,13 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
-		"build": "node build-extension.mjs",
+		"build": "node build-extension.mjs both",
+		"build:firefox": "node build-extension.mjs firefox",
+		"build:chrome": "node build-extension.mjs chrome",
 		"preview": "vite preview",
 		"format": "prettier --write . --ignore-unknown",
 		"format:check": "prettier --check . --ignore-unknown",
-		"test": "node --test",
-		"package": "node build-extension.mjs && npx web-ext build --source-dir=dist --filename=threeflux-$(node -p 'JSON.parse(require(\"fs\").readFileSync(\"manifest.json\",\"utf8\")).version_name').zip"
+		"test": "node --test"
 	},
 	"dependencies": {
 		"@fluentui/react-icons": "^2.0.332",
@@ -18,7 +19,8 @@
 		"react": "^19.2.7",
 		"react-dom": "^19.2.7",
 		"react-hotkeys-hook": "^2.4.1",
-		"styled-components": "^5.2.3"
+		"styled-components": "^5.2.3",
+		"webextension-polyfill": "^0.12.0"
 	},
 	"devDependencies": {
 		"@vitejs/plugin-react-swc": "^4.3.1",

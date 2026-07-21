@@ -45,8 +45,12 @@ npm test
 # Run the extension in a temporary Firefox profile (auto-reloads on changes)
 web-ext run --source-dir=.
 
-# Build the extension for distribution
-web-ext build --source-dir=.
+# Build the Vite-enhanced reader + static files for both browsers
+npm run build
+
+# Build for a single browser
+npm run build:firefox
+npm run build:chrome
 
 # Lint the extension
 web-ext lint --source-dir=.
@@ -54,6 +58,53 @@ web-ext lint --source-dir=.
 # Check formatting
 npm run format:check
 ```
+
+## Cross-Browser Build
+
+The same codebase produces both Firefox and Chrome extensions via `webextension-polyfill`.
+
+- **Source**: all files use `import browser from 'webextension-polyfill'`, which maps to `browser.*` (Firefox native) or `chrome.*` with Promise wrapping (Chrome).
+- **Manifest generation**: the build script generates browser-specific manifests:
+  - `dist-firefox/manifest.json` — includes `browser_specific_settings`, `version_name`, cross-browser `background.scripts` + `background.service_worker`
+  - `dist-chrome/manifest.json` — strips Firefox-only keys, `service_worker` only
+- **Output**:
+  - `web-ext-artifacts/threeflux-{version_name}-firefox.zip`
+  - `web-ext-artifacts/threeflux-{version_name}-chrome.zip`
+- **Vite output** is shared — the React app is identical for both browsers, only the manifest + polyfill differ
+
+## Versioning
+
+Dual-version scheme to avoid merge conflicts with upstream tags:
+
+| File | Field | Example | Format |
+|---|---|---|---|
+| `manifest.json` | `version` | `2.7.1.1` | Dot-numbers only (Firefox/AMO requirement). 4th segment = our revision counter. |
+| `manifest.json` | `version_name` | `2.7.1-3f.1` | Freeform label shown in `about:addons`. |
+| `package.json` | `version` | `2.7.1-3f.1` | npm semver with `-3f` prerelease tag. |
+| `package-lock.json` | `version` | `2.7.1-3f.1` | Same as package.json. |
+
+- `npm run package` reads `version_name` from manifest.json and names the output `threeflux-{version_name}.zip`
+- Git tags use `v2.7.1-3f.N` format
+- Increment only the last segment: `2.7.1-3f.1` → `2.7.1-3f.2` (manifest `version` → `2.7.1.2`)
+- Upstream uses 3-segment tags (`v2.7.1`), so no collision
+
+## Upstream Upgrades
+
+See `UPGRADE.md` for the full step-by-step workflow. Quick summary:
+
+1. `git fetch upstream --tags`
+2. `git checkout v2.8.0 -b release/2.8.0`
+3. `find . -type f -name '*.js' -o -name '*.jsx' ! -path './node_modules/*' -exec sed -i 's/chrome\./browser./g' {} +`
+4. Apply manual manifest.json Firefox patch (add `browser_specific_settings`, cross-browser background, rename, `version_name`)
+5. Simplify any new callback Promise wrappers
+6. `npm test && npx web-ext lint --source-dir=.`
+7. Merge into `main`, tag `v2.8.0-3f.1`
+
+## Session Save
+
+Saying **"save"** in conversation means:
+1. Update this `AGENTS.md` with current progress, decisions, and plan
+2. Then run `/compact` to reclaim context
 
 ## Conventions
 
