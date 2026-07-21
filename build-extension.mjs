@@ -14,6 +14,10 @@ const staticFiles = [
 	'storage-utils.js',
 ]
 
+const polyfillJsFiles = ['background.js', 'options.js']
+
+const POLYFILL_IMPORT = "import browser from 'webextension-polyfill'\n"
+
 const firefoxOnly = ['browser_specific_settings']
 
 async function readManifest() {
@@ -35,9 +39,16 @@ async function writeChromeManifest(manifest, outDir) {
 	)
 }
 
-async function copyStatic(outDir, manifest) {
+async function copyStatic(outDir, manifest, label) {
 	for (const file of staticFiles) {
-		await cp(path.join(rootDir, file), path.join(outDir, file))
+		const srcPath = path.join(rootDir, file)
+		const dstPath = path.join(outDir, file)
+		if (label === 'chrome' && polyfillJsFiles.includes(file)) {
+			const content = await readFile(srcPath, 'utf8')
+			await writeFile(dstPath, POLYFILL_IMPORT + content)
+		} else {
+			await cp(srcPath, dstPath)
+		}
 	}
 	await writeFile(
 		path.join(outDir, 'manifest.json'),
@@ -84,7 +95,7 @@ async function buildTarget(label) {
 
 	await mkdir(distDir, { recursive: true })
 
-	await copyStatic(distDir, manifest)
+	await copyStatic(distDir, manifest, label)
 
 	if (label === 'chrome') {
 		await writeChromeManifest(manifest, distDir)

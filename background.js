@@ -1,4 +1,3 @@
-import browser from 'webextension-polyfill'
 import { migrateSyncStorageToLocal } from './storage-utils.js'
 
 const ALARM_NAME = 'miniflux-refresh'

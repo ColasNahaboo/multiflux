@@ -1,4 +1,3 @@
-import browser from 'webextension-polyfill'
 import {
 	DEFAULT_SETTINGS,
 	normalizeServerUrl,
