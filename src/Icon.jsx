@@ -34,6 +34,7 @@ const icons = {
 	edit: Edit16Regular,
 	delete: Delete16Regular,
 	website: Globe16Regular,
+	globe: Globe16Regular,
 	add: Add16Regular,
 	externalLink: Open16Regular,
 	comments: Comment16Regular,

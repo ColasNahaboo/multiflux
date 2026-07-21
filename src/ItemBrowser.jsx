@@ -610,9 +610,13 @@ function ItemBrowser(props) {
 							'search=' +
 							encodeURIComponent(props.searchQuery),
 				  ]
-				: props.currentFeed.fetch_url
-				? [props.currentFeed.fetch_url]
-				: props.feeds
+			: props.currentFeed.fetch_url
+			? [props.currentFeed.fetch_url]
+			: props.currentFeed.id === -3
+			? props.feeds
+					.filter((f) => f.is_feed && !f.hide_globally)
+					.map((f) => f.fetch_url)
+			: props.feeds
 						.filter((f) => f.category)
 						.filter((f) => f.category.id === props.currentFeed.id)
 						.map((f) => f.fetch_url)

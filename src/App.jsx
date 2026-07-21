@@ -262,10 +262,12 @@ function App({ extensionConfig }) {
 			? currentFeed.fetch_url
 			: `categories/${currentFeed.id}/entries`
 		: 'entries'
-	const searchScopeLabel =
-		!currentFeed || currentFeed.id === -1
-			? 'all articles'
-			: currentFeed.title
+			const searchScopeLabel =
+				!currentFeed || currentFeed.id === -1
+					? 'all articles'
+					: currentFeed.id === -3
+					? 'global unread'
+					: currentFeed.title
 
 	useEffect(() => {
 		document.title = currentItem?.title
@@ -328,6 +330,11 @@ function App({ extensionConfig }) {
 				)
 
 				const feedTree = [
+					{
+						id: -3,
+						title: 'Global Unread',
+						unreads: 0,
+					},
 					{ id: -1, title: 'All', fetch_url: 'entries', unreads: 0 },
 					{
 						id: -2,
@@ -420,6 +427,12 @@ function App({ extensionConfig }) {
 				state = feeds
 				f = feeds.find((x) => x.id === f && x.fetch_url)
 			}
+			if (f.id === -3) {
+				f.unreads = state
+					.filter((x) => x.is_feed && !x.hide_globally)
+					.reduce((sum, x) => sum + (x.unreads || 0), 0)
+				return
+			}
 			if (!f.fetch_url) return
 
 			const unread = await apiCall(
@@ -445,7 +458,7 @@ function App({ extensionConfig }) {
 		}
 
 		if (updateUnreadTrigger.length > 0) {
-			;[-2, -1, ...updateUnreadTrigger].forEach((u) =>
+			;[-3, -2, -1, ...updateUnreadTrigger].forEach((u) =>
 				updateUnread(u, updateUnreadTrigger)
 			)
 			setUpdateUnreadTrigger([])
@@ -486,6 +499,7 @@ function App({ extensionConfig }) {
 		const categoryChanges = new Map()
 		let allChange = 0
 		let starredChange = 0
+		let globalChange = 0
 		entries.forEach((entry) => {
 			feedChanges.set(
 				entry.feed.id,
@@ -499,6 +513,7 @@ function App({ extensionConfig }) {
 				)
 			allChange += direction
 			if (entry.starred) starredChange += direction
+			if (!entry.feed.hide_globally) globalChange += direction
 		})
 		feeds.forEach((item) => {
 			const change =
@@ -506,6 +521,8 @@ function App({ extensionConfig }) {
 					? allChange
 					: item.id === -2
 					? starredChange
+					: item.id === -3
+					? globalChange
 					: item.is_feed
 					? feedChanges.get(item.id) || 0
 					: categoryChanges.get(item.id) || 0
@@ -521,6 +538,7 @@ function App({ extensionConfig }) {
 	}
 	const activeScopeIncludesFeed = (feed) =>
 		currentFeed?.id === -1 ||
+		currentFeed?.id === -3 ||
 		currentFeed?.id === feed.id ||
 		(!currentFeed?.is_feed && currentFeed?.id === feed.category?.id)
 	const refreshSingleFeed = async (feed) => {

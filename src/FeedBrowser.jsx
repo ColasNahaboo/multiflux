@@ -475,6 +475,7 @@ function FeedBrowser(props) {
 							}}
 						>
 							{!item.fetch_url &&
+								item.id !== -3 &&
 								(collapsed.includes(item.id) ? (
 									<Collapse
 										title='Expand category'
@@ -522,9 +523,18 @@ function FeedBrowser(props) {
 									/>
 								</TopIcon>
 							)}
+							{item.id === -3 && (
+								<TopIcon>
+									<Icon name='globe' size={16} />
+								</TopIcon>
+							)}
 							{item.is_feed && <Favico src={item.icon_data} />}
 							<FeedTitle selected={isSelected(item)}>
-								{item.id === -1 ? 'All articles' : item.title}
+								{item.id === -1
+									? 'All articles'
+									: item.id === -3
+									? 'Global Unread'
+									: item.title}
 							</FeedTitle>
 							{item.unreads > 0 && (
 								<UnreadBubble>{item.unreads}</UnreadBubble>
