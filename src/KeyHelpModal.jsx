@@ -18,7 +18,7 @@ const keyMap = [
 	['u', 'Toggle showing unread/all items'],
 	['s', 'Toggle item sort order'],
 	['f', 'Star/unstar item'],
-	['v', 'Open original link in a new tab'],
+	['v/w', 'Open original link in a new tab'],
 	['c', 'Open comments in a new tab'],
 	['D', 'Toggle light/dark theme'],
 	['r', 'Refresh unread counts'],
