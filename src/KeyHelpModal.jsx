@@ -23,7 +23,7 @@ const keyMap = [
 	['D', 'Toggle light/dark theme'],
 	['r', 'Refresh unread counts'],
 	['R', 'Fetch feeds and refresh the feed list'],
-	['h', 'Show keyboard shortcuts'],
+	['h/?', 'Show keyboard shortcuts'],
 	['Escape/Enter', 'Close this window'],
 ]
 

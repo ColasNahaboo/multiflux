@@ -884,7 +884,7 @@ function App({ extensionConfig }) {
 	}, [feedPaneWidth, itemPaneWidth, feedPaneCollapsed])
 
 	useHotkeys(
-		'h',
+		'h,?',
 		() => {
 			setHelpOpen(true)
 		},
