@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { formatDate } from './lib/util'
 import styled from 'styled-components'
 import { useHotkeys } from 'react-hotkeys-hook'
@@ -281,8 +281,34 @@ function ItemViewer(props) {
 	const shareFeedbackTimersRef = useRef({})
 	const [activeShareControls, setActiveShareControls] = useState({})
 
+	const openOrReuseOA = useCallback(async (url) => {
+		const { oaTabId } = await browser.storage.local.get('oaTabId')
+		if (oaTabId) {
+			try {
+				const tab = await browser.tabs.get(oaTabId)
+				await browser.tabs.update(oaTabId, { url, active: true })
+				await browser.windows.update(tab.windowId, { focused: true })
+				return
+			} catch {}
+		}
+		const tab = await browser.tabs.create({ url })
+		await browser.storage.local.set({ oaTabId: tab.id })
+	}, [])
+
+	useEffect(() => {
+		const handler = async (tabId) => {
+			const { oaTabId } = await browser.storage.local.get('oaTabId')
+			if (tabId === oaTabId)
+				await browser.storage.local.remove('oaTabId')
+		}
+		if (browser.tabs?.onRemoved) {
+			browser.tabs.onRemoved.addListener(handler)
+			return () => browser.tabs.onRemoved.removeListener(handler)
+		}
+	}, [])
+
 	useHotkeys('f', () => toggleStar(), [item])
-	useHotkeys('v,w', () => item && window.open(item.url, 'threeflux-oa'), [item])
+	useHotkeys('v,w', () => item && openOrReuseOA(item.url), [item])
 	useHotkeys('c', () => commentsUrl && window.open(commentsUrl, '_blank'), [
 		commentsUrl,
 	])
