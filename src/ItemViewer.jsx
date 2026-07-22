@@ -282,7 +282,7 @@ function ItemViewer(props) {
 	const [activeShareControls, setActiveShareControls] = useState({})
 
 	useHotkeys('f', () => toggleStar(), [item])
-	useHotkeys('v,w', () => item && window.open(item.url, '_blank'), [item])
+	useHotkeys('v,w', () => item && window.open(item.url, 'threeflux-oa'), [item])
 	useHotkeys('c', () => commentsUrl && window.open(commentsUrl, '_blank'), [
 		commentsUrl,
 	])
