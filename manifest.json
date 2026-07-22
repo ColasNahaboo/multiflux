@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Multiflux",
   "description": "Unread badge and optional three-pane reader for your self-hosted Miniflux server.",
-  "version": "2.7.1.8",
+  "version": "0.0.1",
 
   "browser_specific_settings": {
     "gecko": {

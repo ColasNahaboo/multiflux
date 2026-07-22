@@ -17,7 +17,7 @@ main              — FireFox-ported version (current HEAD)
 upstream/main     — tracks upstream HEAD, never modified locally
 release/x.y.z     — temporary branch per upgrade, merged into main then deleted
 vX.Y.Z            — upstream release tags
-vX.Y.Z-firefox    — our tags marking completed Firefox ports
+vX.Y.Z            — our tags (Multiflux semver, not correlated with upstream)
 ```
 
 ## Step-by-step Upgrade (per upstream release)
@@ -144,10 +144,9 @@ npm test
 
 ```bash
 git add -A
-git commit -m "multiflux: port upstream v2.8.0 to Firefox"
+git commit -m "multiflux: port upstream v2.8.0"
 git checkout main
 git merge release/2.8.0
-git tag -a v2.8.0-firefox -m "Multiflux: Firefox port of Miniflux Companion v2.8.0"
 git branch -d release/2.8.0
 ```
 
@@ -172,7 +171,7 @@ find . -type f \( -name '*.js' -o -name '*.jsx' \) ! -path './node_modules/*' ! 
 npm test && npx web-ext lint --source-dir=.
 
 # Merge
-git add -A && git commit -m "multiflux: port upstream $UPSTREAM to Firefox"
+git add -A && git commit -m "multiflux: port upstream $UPSTREAM"
 git checkout main && git merge release/${UPSTREAM#v}
-git tag -a ${UPSTREAM}-firefox -m "Multiflux: Firefox port of Miniflux Companion $UPSTREAM"
+# Then tag with the new Multiflux version per AGENTS.md versioning
 ```

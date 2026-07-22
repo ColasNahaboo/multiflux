@@ -6,7 +6,7 @@ Source: https://codeberg.org/gbcox/miniflux-companion (GPL v3)
 
 ## Current State
 
-**v2.7.1-3f.8** — active development, Firefox + Chrome cross-browser builds.
+**v0.0.1** — personal beta, Firefox + Chrome cross-browser builds.
 
 Key features beyond upstream:
 - Global Unread pseudo-feed (filters by `hide_globally` flag)
@@ -108,18 +108,11 @@ The same codebase produces both Firefox and Chrome extensions via `webextension-
 
 ## Versioning
 
-Dual-version scheme to avoid merge conflicts with upstream tags:
+Plain semver (`0.0.1`, `0.1.0`, `1.0.0`). Same version in `manifest.json`, `package.json`, and `package-lock.json`.
 
-| File | Field | Example | Format |
-|---|---|---|---|
-| `manifest.json` | `version` | `2.7.1.1` | Dot-numbers only (Firefox/AMO requirement). 4th segment = our revision counter. |
-| `package.json` | `version` | `2.7.1-3f.1` | npm semver with `-3f` prerelease tag. Used as `version_name` for packaging. |
-| `package-lock.json` | `version` | `2.7.1-3f.1` | Same as package.json. |
-
-- `npm run package` reads `version` from package.json and names the output `multiflux-{version_name}.zip`
-- Git tags use `v2.7.1-3f.N` format
-- Increment only the last segment: `2.7.1-3f.1` → `2.7.1-3f.2` (manifest `version` → `2.7.1.2`)
-- Upstream uses 3-segment tags (`v2.7.1`), so no collision
+- `npm run package` names the output `multiflux-{version}.zip`
+- Git tags use `v{version}` format (e.g. `v0.0.1`)
+- Increment per semantic change: patch for fixes, minor for features, major for breaking changes
 
 ## Upstream Upgrades
 
@@ -131,7 +124,7 @@ See `UPGRADE.md` for the full step-by-step workflow. Quick summary:
 4. Apply manual manifest.json Firefox patch (add `browser_specific_settings`, cross-browser background, rename, `version_name`)
 5. Simplify any new callback Promise wrappers
 6. `npm test && npx web-ext lint --source-dir=.`
-7. Merge into `main`, tag `v2.8.0-3f.1`
+7. Merge into `main`, tag `v{version}`
 
 ## Session Save
 
