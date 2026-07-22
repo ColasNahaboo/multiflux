@@ -282,24 +282,37 @@ function ItemViewer(props) {
 	const [activeShareControls, setActiveShareControls] = useState({})
 
 	const openOrReuseOA = useCallback(async (url) => {
-		const { oaTabId } = await browser.storage.local.get('oaTabId')
+		const { oaWindowId, oaTabId } = await browser.storage.local.get([
+			'oaWindowId',
+			'oaTabId',
+		])
 		if (oaTabId) {
 			try {
-				const tab = await browser.tabs.get(oaTabId)
+				await browser.tabs.get(oaTabId)
 				await browser.tabs.update(oaTabId, { url, active: true })
-				await browser.windows.update(tab.windowId, { focused: true })
+				await browser.windows.update(oaWindowId, { focused: true })
 				return
 			} catch {}
 		}
-		const tab = await browser.tabs.create({ url })
-		await browser.storage.local.set({ oaTabId: tab.id })
+		const current = await browser.windows.getCurrent()
+		const win = await browser.windows.create({
+			url,
+			left: current.left + current.width,
+			top: current.top,
+			width: Math.min(current.width, 900),
+			height: current.height || 800,
+		})
+		await browser.storage.local.set({
+			oaWindowId: win.id,
+			oaTabId: win.tabs[0].id,
+		})
 	}, [])
 
 	useEffect(() => {
 		const handler = async (tabId) => {
 			const { oaTabId } = await browser.storage.local.get('oaTabId')
 			if (tabId === oaTabId)
-				await browser.storage.local.remove('oaTabId')
+				await browser.storage.local.remove(['oaWindowId', 'oaTabId'])
 		}
 		if (browser.tabs?.onRemoved) {
 			browser.tabs.onRemoved.addListener(handler)
