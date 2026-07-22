@@ -1,8 +1,41 @@
-# Threeflux
+# Multiflux
 
 Port of the Miniflux Companion Chrome extension to Firefox.
 
 Source: https://codeberg.org/gbcox/miniflux-companion (GPL v3)
+
+## Current State
+
+**v2.7.1-3f.8** — active development, Firefox + Chrome cross-browser builds.
+
+Key features beyond upstream:
+- Global Unread pseudo-feed (filters by `hide_globally` flag)
+- OA (Original Article) reusable standalone window positioned to the right
+- Vim-style keyboard aliases (q/k for prev, e/j for next, w for open article, ? for help)
+- Removed enhanced reader toggle (always enabled) and Miniflux web path options
+- Default refresh interval: 60 minutes (was 5)
+- Custom Multiflux toolbar icons
+
+### Keyboard Shortcuts
+
+| Key | Action |
+|---|---|
+| `Left / p / k / q` | Previous item |
+| `Right / n / j / e / Space` | Next item |
+| `m` | Mark item read/unread |
+| `A` | Mark all items read |
+| `u` | Toggle unread/all items |
+| `s` | Toggle item sort order |
+| `f` | Star/unstar item |
+| `v / w` | Open original article in OA window |
+| `c` | Open comments in new tab |
+| `r` | Refresh unread counts |
+| `R` | Fetch feeds and refresh feed list |
+| `D` | Toggle light/dark theme |
+| `h / ?` | Show keyboard shortcuts |
+| `Up/Down` | Navigate feeds |
+| `x` | Collapse/uncollapse category |
+| `U` | Toggle unread/all feeds |
 
 ## Project Structure
 
@@ -64,12 +97,13 @@ npm run format:check
 The same codebase produces both Firefox and Chrome extensions via `webextension-polyfill`.
 
 - **Source**: all files use `import browser from 'webextension-polyfill'`, which maps to `browser.*` (Firefox native) or `chrome.*` with Promise wrapping (Chrome).
+- **Polyfill injection**: `background.js` and `options.js` do NOT import the polyfill directly — Firefox uses the native `browser` global. The build script injects the import only for Chrome builds.
 - **Manifest generation**: the build script generates browser-specific manifests:
-  - `dist-firefox/manifest.json` — includes `browser_specific_settings`, `version_name`, cross-browser `background.scripts` + `background.service_worker`
+  - `dist-firefox/manifest.json` — includes `browser_specific_settings`, version_name, cross-browser `background.scripts` + `background.service_worker`
   - `dist-chrome/manifest.json` — strips Firefox-only keys, `service_worker` only
 - **Output**:
-  - `web-ext-artifacts/threeflux-{version_name}-firefox.zip`
-  - `web-ext-artifacts/threeflux-{version_name}-chrome.zip`
+  - `web-ext-artifacts/multiflux-{version_name}-firefox.zip`
+  - `web-ext-artifacts/multiflux-{version_name}-chrome.zip`
 - **Vite output** is shared — the React app is identical for both browsers, only the manifest + polyfill differ
 
 ## Versioning
@@ -82,7 +116,7 @@ Dual-version scheme to avoid merge conflicts with upstream tags:
 | `package.json` | `version` | `2.7.1-3f.1` | npm semver with `-3f` prerelease tag. Used as `version_name` for packaging. |
 | `package-lock.json` | `version` | `2.7.1-3f.1` | Same as package.json. |
 
-- `npm run package` reads `version` from package.json and names the output `threeflux-{version_name}.zip`
+- `npm run package` reads `version` from package.json and names the output `multiflux-{version_name}.zip`
 - Git tags use `v2.7.1-3f.N` format
 - Increment only the last segment: `2.7.1-3f.1` → `2.7.1-3f.2` (manifest `version` → `2.7.1.2`)
 - Upstream uses 3-segment tags (`v2.7.1`), so no collision

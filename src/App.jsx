@@ -159,7 +159,7 @@ const READER_MIN_WIDTH = 420
 const RESIZE_HANDLE_WIDTH = 5
 const DEFAULT_FEED_WIDTH = 278
 const DEFAULT_ITEM_WIDTH = 380
-const PRODUCT_TITLE = 'Miniflux Companion'
+const PRODUCT_TITLE = 'Multiflux'
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max)
 

@@ -80,7 +80,7 @@ async function verifyBuild(outDir) {
 async function packageExtension(outDir, label, versionName) {
 	const outputDir = path.join(rootDir, 'web-ext-artifacts')
 	await mkdir(outputDir, { recursive: true })
-	const filename = `threeflux-${versionName}-${label}.zip`
+	const filename = `multiflux-${versionName}-${label}.zip`
 	execSync(`npx web-ext build --source-dir=${outDir} --filename=${filename} --overwrite-dest`, {
 		stdio: 'inherit',
 	})
@@ -91,7 +91,7 @@ async function buildTarget(label) {
 	const versionName = await readVersionName()
 	const distDir = path.join(rootDir, `dist-${label}`)
 
-	console.log(`\n=== Building Threeflux for ${label.toUpperCase()} ===`)
+	console.log(`\n=== Building Multiflux for ${label.toUpperCase()} ===`)
 
 	await mkdir(distDir, { recursive: true })
 

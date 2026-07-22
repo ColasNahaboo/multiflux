@@ -9,7 +9,7 @@ let badgeRefreshTimer
 let resetAlarmWithNextBadgeRefresh = false
 let badgeRefreshResponders = []
 
-console.info('Miniflux Companion service worker started')
+console.info('Multiflux service worker started')
 
 /* ---------------- settings ---------------- */
 

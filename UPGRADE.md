@@ -1,6 +1,6 @@
 # Upgrade Process
 
-How to absorb a new upstream release of Miniflux Companion into Threeflux.
+How to absorb a new upstream release of Miniflux Companion into Multiflux.
 
 ## Remote Setup
 
@@ -79,7 +79,7 @@ If found, apply the same simplifications used in the v2.7.1 port:
 Upstream `manifest.json` needs these changes. Instead of editing manually, apply this standard diff:
 
 **Changes to apply to upstream manifest.json:**
-1. Rename `"name"` → `"Threeflux"`
+1. Rename `"name"` → `"Multiflux"`
 2. Replace the entire `"background"` block:
    ```json
    "background": {
@@ -92,14 +92,14 @@ Upstream `manifest.json` needs these changes. Instead of editing manually, apply
    ```json
    "browser_specific_settings": {
      "gecko": {
-       "id": "threeflux@example.com",
+       "id": "multiflux@example.com",
        "data_collection_permissions": {
          "required": ["none"]
        }
      }
    },
    ```
-4. Update `"action"` → `"default_title": "Threeflux"`
+4. Update `"action"` → `"default_title": "Multiflux"`
 
 ### 6. Review upstream diff for new Firefox-sensitive changes
 
@@ -144,10 +144,10 @@ npm test
 
 ```bash
 git add -A
-git commit -m "threeflux: port upstream v2.8.0 to Firefox"
+git commit -m "multiflux: port upstream v2.8.0 to Firefox"
 git checkout main
 git merge release/2.8.0
-git tag -a v2.8.0-firefox -m "Threeflux: Firefox port of Miniflux Companion v2.8.0"
+git tag -a v2.8.0-firefox -m "Multiflux: Firefox port of Miniflux Companion v2.8.0"
 git branch -d release/2.8.0
 ```
 
@@ -172,7 +172,7 @@ find . -type f \( -name '*.js' -o -name '*.jsx' \) ! -path './node_modules/*' ! 
 npm test && npx web-ext lint --source-dir=.
 
 # Merge
-git add -A && git commit -m "threeflux: port upstream $UPSTREAM to Firefox"
+git add -A && git commit -m "multiflux: port upstream $UPSTREAM to Firefox"
 git checkout main && git merge release/${UPSTREAM#v}
-git tag -a ${UPSTREAM}-firefox -m "Threeflux: Firefox port of Miniflux Companion $UPSTREAM"
+git tag -a ${UPSTREAM}-firefox -m "Multiflux: Firefox port of Miniflux Companion $UPSTREAM"
 ```
