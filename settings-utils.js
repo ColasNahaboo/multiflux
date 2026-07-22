@@ -1,12 +1,10 @@
 export const DEFAULT_SETTINGS = Object.freeze({
 	url: '',
-	refresh: 5,
+	refresh: 60,
 	badgeTextColor: '#ffffff',
 	badgeBgColor: '#ff6f00',
-	openMode: 'unread',
 	tabMode: 'new',
 	instantUpdate: false,
-	useEnhancedReader: false,
 	maxItems: 100,
 	theme: 'auto',
 	autoReadTitleKeywords: [],

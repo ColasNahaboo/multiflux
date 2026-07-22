@@ -383,58 +383,20 @@
 					</section>
 					<section class="card">
 						<h2>Reader</h2>
-						<label class="check-label"
-							><input type="checkbox" id="useEnhancedReader" />
-							Use enhanced three-pane reader</label
+						<label
+							>Maximum number of items to fetch<input
+								id="maxItems"
+								type="number"
+								min="10"
+								max="1000"
+								step="1" /></label
+						><label
+							>Theme<select id="theme">
+								<option value="auto">Auto</option>
+								<option value="light">Light</option>
+								<option value="dark">Dark</option>
+							</select></label
 						>
-						<div class="hint">
-							Open the bundled desktop-style reader instead of the
-							standard Miniflux web interface.
-						</div>
-						<fieldset
-							class="settings-subgroup"
-							id="enhancedReaderSettings"
-						>
-							<label
-								>Maximum number of items to fetch<input
-									id="maxItems"
-									type="number"
-									min="10"
-									max="1000"
-									step="1" /></label
-							><label
-								>Theme<select id="theme">
-									<option value="auto">Auto</option>
-									<option value="light">Light</option>
-									<option value="dark">Dark</option>
-								</select></label
-							>
-						</fieldset>
-						<fieldset class="group radio-list" id="openModeGroup">
-							<legend><strong>Open Miniflux to</strong></legend>
-							<label
-								><input
-									type="radio"
-									name="openMode"
-									value="unread"
-								/>
-								Unread articles</label
-							><label
-								><input
-									type="radio"
-									name="openMode"
-									value="categories"
-								/>
-								Categories</label
-							><label
-								><input
-									type="radio"
-									name="openMode"
-									value="feeds"
-								/>
-								Feeds</label
-							>
-						</fieldset>
 					</section>
 					<section class="card">
 						<h2>Filtering</h2>

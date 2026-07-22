@@ -19,10 +19,8 @@ function getSettings() {
 		'refresh',
 		'badgeTextColor',
 		'badgeBgColor',
-		'openMode',
 		'tabMode',
 		'instantUpdate',
-		'useEnhancedReader',
 		'maxItems',
 		'theme',
 		'autoReadTitleKeywords',
@@ -177,30 +175,12 @@ initializeServiceWorker()
 
 browser.action.onClicked.addListener(async () => {
 	const {
-		url,
-		openMode = 'unread',
 		tabMode = 'new',
 		instantUpdate = false,
-		useEnhancedReader = false,
 	} = await getSettings()
 
-	let targetUrl
-	let focusUrl
-
-	if (useEnhancedReader) {
-		targetUrl = browser.runtime.getURL('index.html')
-		focusUrl = targetUrl
-	} else {
-		if (!url) return
-
-		let path = '/unread'
-		if (openMode === 'categories') path = '/categories'
-		if (openMode === 'feeds') path = '/feeds'
-
-		const baseUrl = url.replace(/\/$/, '')
-		targetUrl = baseUrl + path
-		focusUrl = baseUrl + '*'
-	}
+	const targetUrl = browser.runtime.getURL('index.html')
+	const focusUrl = targetUrl
 
 	if (tabMode === 'focus') {
 		const tabs = await browser.tabs.query({ url: focusUrl })

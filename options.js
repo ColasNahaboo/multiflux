@@ -16,12 +16,6 @@ function requestBackgroundRefresh() {
 	browser.runtime.sendMessage({ type: 'refreshBadge', resetAlarm: true }).catch(() => {})
 }
 
-function updateReaderModeState() {
-	const enabled = byId('useEnhancedReader').checked
-	byId('openModeGroup').disabled = enabled
-	byId('enhancedReaderSettings').disabled = !enabled
-}
-
 function updateBadgePreview() {
 	byId('previewCount').style.color = byId('badgeTextColor').value
 	byId('previewCount').style.backgroundColor = byId('badgeBgColor').value
@@ -61,10 +55,8 @@ function currentSettings() {
 		refresh: Number(byId('refresh').value),
 		badgeTextColor: byId('badgeTextColor').value,
 		badgeBgColor: byId('badgeBgColor').value,
-		openMode: document.querySelector('[name=openMode]:checked').value,
 		tabMode: document.querySelector('[name=tabMode]:checked').value,
 		instantUpdate: byId('instantUpdate').checked,
-		useEnhancedReader: byId('useEnhancedReader').checked,
 		maxItems: Number(byId('maxItems').value),
 		theme: byId('theme').value,
 		autoReadTitleKeywords: keywords,
@@ -88,17 +80,13 @@ function applySettings(settings, apiToken = byId('apiToken').value) {
 	])
 		byId(id).value = settings[id]
 	byId('apiToken').value = apiToken
-	for (const id of ['instantUpdate', 'useEnhancedReader'])
+	for (const id of ['instantUpdate'])
 		byId(id).checked = Boolean(settings[id])
-	document.querySelector(
-		`[name=openMode][value="${settings.openMode}"]`
-	).checked = true
 	document.querySelector(
 		`[name=tabMode][value="${settings.tabMode}"]`
 	).checked = true
 	keywords = parseKeywords(settings.autoReadTitleKeywords)
 	renderKeywords()
-	updateReaderModeState()
 	updateBadgePreview()
 }
 
@@ -153,7 +141,6 @@ byId('keywordInput').addEventListener('paste', (event) => {
 })
 document.querySelectorAll('input,select').forEach((element) =>
 	element.addEventListener('input', () => {
-		if (element.id === 'useEnhancedReader') updateReaderModeState()
 		if (element.type === 'color') updateBadgePreview()
 		markDirty()
 	})
