@@ -14,6 +14,7 @@ const keyMap = [
 	['PageUp', 'Scroll item content up'],
 	['PageDown', 'Scroll item content down'],
 	['m', 'Mark item as read/unread'],
+	['t', 'Mark older items as read'],
 	['A', 'Mark all items as read'],
 	['u', 'Toggle showing unread/all items'],
 	['s', 'Toggle item sort order'],

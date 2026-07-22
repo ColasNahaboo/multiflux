@@ -23,6 +23,7 @@ Key features beyond upstream:
 | `Left / p / k / q` | Previous item |
 | `Right / n / j / e / Space` | Next item |
 | `m` | Mark item read/unread |
+| `t` | Mark all older items read |
 | `A` | Mark all items read |
 | `u` | Toggle unread/all items |
 | `s` | Toggle item sort order |

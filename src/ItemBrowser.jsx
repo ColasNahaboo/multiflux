@@ -297,6 +297,20 @@ function FeedItemList(props) {
 		},
 		[props.items, props.currentIndex]
 	)
+	useHotkeys(
+		't',
+		(e) => {
+			if (props.currentIndex < 0) return
+			const current = props.items[props.currentIndex]
+			const older = props.items.filter(
+				(x) =>
+					x.published_at < current.published_at &&
+					x.status === 'unread'
+			)
+			props.markRead(older, true)
+		},
+		[props.items, props.currentIndex]
+	)
 
 	return (
 		<ItemList>
