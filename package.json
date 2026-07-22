@@ -1,6 +1,6 @@
 {
 	"name": "threeflux",
-	"version": "2.7.1-3f.3",
+	"version": "2.7.1-3f.4",
 	"private": true,
 	"type": "module",
 	"scripts": {
