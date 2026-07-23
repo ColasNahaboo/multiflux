@@ -76,8 +76,11 @@ npm install
 # Run tests
 npm test
 
-# Run the extension in a temporary Firefox profile (auto-reloads on changes)
-web-ext run --source-dir=.
+# Run the extension in a persistent Firefox profile (build first, then launch)
+npm run dev:firefox
+
+# Run the extension in a Chromium window
+npm run dev:chromium
 
 # Build the Vite-enhanced reader + static files for both browsers
 npm run build

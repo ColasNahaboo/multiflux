@@ -5,6 +5,8 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
+		"dev:firefox": "web-ext run --source-dir=dist-firefox --keep-profile-changes",
+		"dev:chromium": "chromium --load-extension=\"$PWD/dist-chrome\"",
 		"build": "node build-extension.mjs both",
 		"build:firefox": "node build-extension.mjs firefox",
 		"build:chrome": "node build-extension.mjs chrome",
