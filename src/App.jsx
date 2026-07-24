@@ -243,6 +243,7 @@ function App({ extensionConfig }) {
 	const [updateFeedsTrigger, setUpdateFeedsTrigger] = useState(true)
 	const [renderFeedsTrigger, setRenderFeedsTrigger] = useState(true)
 	const [updateUnreadTrigger, setUpdateUnreadTrigger] = useState([])
+	const [entrySortDirection, setEntrySortDirection] = useState('desc')
 	const [readReconciliation, setReadReconciliation] = useState()
 	const [bookmarkReconciliation, setBookmarkReconciliation] = useState()
 	const [viewRevision, setViewRevision] = useState(0)
@@ -321,10 +322,14 @@ function App({ extensionConfig }) {
 			setSourcesLoading(true)
 			const cache = JSON.parse(localStorage.getItem('favicons')) || {}
 			try {
-				const [apiFeeds, apiCategories] = await Promise.all([
+				const [apiFeeds, apiCategories, userInfo] = await Promise.all([
 					apiCall('feeds', setError),
 					apiCall('categories', setError),
+					apiCall('me', setError),
 				])
+				setEntrySortDirection(
+					userInfo?.entry_sorting_direction || 'desc'
+				)
 				const categoryById = new Map(
 					apiCategories.map((category) => [category.id, category])
 				)
@@ -345,7 +350,6 @@ function App({ extensionConfig }) {
 				]
 
 				apiCategories
-					.sort((a, b) => a.title.localeCompare(b.title))
 					.forEach((category) => {
 						feedTree.push({ ...category, unreads: 0 })
 						feedTree.push(
@@ -353,7 +357,6 @@ function App({ extensionConfig }) {
 								.filter(
 									(feed) => feed.category?.id === category.id
 								)
-								.sort((a, b) => a.title.localeCompare(b.title))
 								.map((feed) => ({
 									...feed,
 									category: categoryById.get(
@@ -1128,6 +1131,7 @@ function App({ extensionConfig }) {
 							onSetReadState={setReadState}
 							bookmarkReconciliation={bookmarkReconciliation}
 							onToggleBookmark={toggleBookmark}
+							entrySortDirection={entrySortDirection}
 						/>
 					</ItemPane>
 					<ColumnResizeHandle

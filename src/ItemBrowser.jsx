@@ -511,7 +511,9 @@ function ItemBrowser(props) {
 	const [isLoading, setIsLoading] = useState(false)
 	const [loadError, setLoadError] = useState()
 	const [sortOldFirst, setSortOldFirst] = useState(
-		localStorage.getItem('sort') === 'o'
+		localStorage.getItem('sort') !== null
+			? localStorage.getItem('sort') === 'o'
+			: props.entrySortDirection === 'asc'
 	)
 	const [showRead, setShowRead] = useState(
 		localStorage.getItem('filter') === 'a'
