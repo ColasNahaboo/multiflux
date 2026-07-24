@@ -1,5 +1,6 @@
 import { build } from 'vite'
 import { cp, mkdir, readFile, readdir, stat, writeFile } from 'node:fs/promises'
+import { readFileSync } from 'node:fs'
 import { execSync } from 'node:child_process'
 import path from 'node:path'
 
@@ -16,7 +17,10 @@ const staticFiles = [
 
 const polyfillJsFiles = ['background.js', 'options.js']
 
-const POLYFILL_IMPORT = "import browser from 'webextension-polyfill'\n"
+const polyfillSource = readFileSync(
+	path.join(rootDir, 'node_modules/webextension-polyfill/dist/browser-polyfill.min.js'),
+	'utf8'
+)
 
 const firefoxOnly = ['browser_specific_settings']
 
@@ -45,7 +49,7 @@ async function copyStatic(outDir, manifest, label) {
 		const dstPath = path.join(outDir, file)
 		if (label === 'chrome' && polyfillJsFiles.includes(file)) {
 			const content = await readFile(srcPath, 'utf8')
-			await writeFile(dstPath, POLYFILL_IMPORT + content)
+			await writeFile(dstPath, content.replace('\n\n', '\n\n' + polyfillSource + '\n'))
 		} else {
 			await cp(srcPath, dstPath)
 		}

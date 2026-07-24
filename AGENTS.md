@@ -6,12 +6,13 @@ Source: https://codeberg.org/gbcox/miniflux-companion (GPL v3)
 
 ## Current State
 
-**v0.0.1** — personal beta, Firefox + Chrome cross-browser builds.
+**v0.0.2** — personal beta, Firefox + Chrome cross-browser builds.
 
 Key features beyond upstream:
 - Global Unread pseudo-feed (filters by `hide_globally` flag)
 - OA (Original Article) reusable standalone window positioned to the right
 - Vim-style keyboard aliases (q/k for prev, e/j for next, w for open article, ? for help)
+- `t` key: mark all items older than current as read ("unTil now")
 - Removed enhanced reader toggle (always enabled) and Miniflux web path options
 - Default refresh interval: 60 minutes (was 5)
 - Custom Multiflux toolbar icons
