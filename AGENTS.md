@@ -6,7 +6,7 @@ Source: https://codeberg.org/gbcox/miniflux-companion (GPL v3)
 
 ## Current State
 
-**v0.0.2** — personal beta, Firefox + Chrome cross-browser builds.
+**v0.1.0** — personal beta, Firefox + Chrome cross-browser builds.
 
 Key features beyond upstream:
 - Global Unread pseudo-feed (filters by `hide_globally` flag)
