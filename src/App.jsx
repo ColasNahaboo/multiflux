@@ -426,6 +426,7 @@ function App({ extensionConfig }) {
 			if (parseInt(f)) {
 				state = feeds
 				f = feeds.find((x) => x.id === f && x.fetch_url)
+				if (!f) return
 			}
 			if (f.id === -3) {
 				f.unreads = state
