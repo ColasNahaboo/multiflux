@@ -1,4 +1,4 @@
-# Miniflux Companion — Privacy Policy
+# Multiflux — Privacy Policy
 
 Miniflux Companion does not transmit user data to or collect user data for the developer, and it does not sell or share personal data. Extension functionality runs locally in the browser. The extension communicates only with the Miniflux server configured by the user and with external share handlers explicitly invoked by the user, such as an email application or Telegram.
 
@@ -24,4 +24,4 @@ When the user invokes an external share action, the extension passes the selecte
 
 ## Contact
 
-Questions about this policy may be sent to **gbcox@bzb.us**.
+Questions about this policy may be sent to **colas@nahaboo.net**.

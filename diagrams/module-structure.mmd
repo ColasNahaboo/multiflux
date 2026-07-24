@@ -1,0 +1,79 @@
+flowchart TD
+    subgraph EXT["Extension Layer"]
+        M["manifest.json<br/>MV3 cross-browser"]
+        BG["background.js<br/>badge, alarms, click"]
+        OPT["options.html + options.js<br/>settings page"]
+    end
+
+    subgraph UTIL["Shared Utilities"]
+        SET["settings-utils.js<br/>defaults, connection test"]
+        STOR["storage-utils.js<br/>sync→local migration"]
+    end
+
+    BUILD["build-extension.mjs<br/>Vite + web-ext → Firefox & Chrome zips"]
+
+    subgraph REACT["React App (src/)"]
+        ENTRY["index.jsx<br/>load settings, render App"]
+        APP["App.jsx<br/>three-pane layout, feeds, search, keys"]
+
+        subgraph PANES["Three Panes"]
+            FB["FeedBrowser.jsx<br/>categories & feeds nav"]
+            IB["ItemBrowser.jsx<br/>entry list, sort, undo"]
+            IV["ItemViewer.jsx<br/>article, OA window/tab"]
+        end
+
+        subgraph SUPPORT["Support"]
+            FCM["FeedContextMenu.jsx<br/>add/edit/delete feeds"]
+            CNH["ClickNHold.jsx<br/>long-press"]
+            ICON["Icon.jsx<br/>icon wrapper"]
+            KHM["KeyHelpModal.jsx<br/>? keyboard help"]
+        end
+
+        subgraph CONFIG["Configuration"]
+            RC["runtimeConfig.js"]
+            TH["themes.js"]
+            GS["globalStyles.js"]
+            LAY["layout.js"]
+            RSS["readStateStyles.js"]
+        end
+
+        API["lib/util.jsx<br/>Miniflux API client<br/>fetch, badge, dates, icons"]
+    end
+
+    TEST["test/<br/>Node.js tests<br/>(node --test)"]
+
+    SET --> BG
+    SET --> OPT
+    STOR --> BG
+    STOR --> OPT
+    STOR --> ENTRY
+
+    ENTRY --> APP
+    APP --> FB
+    APP --> IB
+    APP --> IV
+    APP --> KHM
+    FB --> FCM
+    IB --> CNH
+    IV --> CNH
+    IV --> ICON
+    APP --> RC
+    APP --> TH
+    APP --> GS
+    APP --> LAY
+    APP --> RSS
+    APP --> API
+    FB --> API
+    IB --> API
+    IV --> API
+    OPT --> SET
+    BG --> API
+
+    style EXT fill:#dae8fc,stroke:#6c8ebf
+    style UTIL fill:#d5e8d4,stroke:#82b366
+    style BUILD fill:#fff2cc,stroke:#d6b656
+    style REACT fill:#f8cecc,stroke:#b85450
+    style PANES fill:#e1d5e7,stroke:#9673a6
+    style SUPPORT fill:#ffe6cc,stroke:#d79b00
+    style CONFIG fill:#f5f5f5,stroke:#666
+    style TEST fill:#e1d5e7,stroke:#9673a6
