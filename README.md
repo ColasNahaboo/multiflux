@@ -1,43 +1,43 @@
-# Miniflux Companion
+# Multiflux
 
-Miniflux Companion is a Chrome/Chromium Manifest V3 extension for a self-hosted Miniflux server. It shows the unread count in the browser toolbar, opens the standard Miniflux interface, and optionally provides an enhanced Fluent-style three-pane reader.
+Multiflux  is a Firefox and a Chrome/Chromium Manifest V3 extension for a Miniflux instance. It provides a nice modern 3-panes-plus-one enhanced interface similar to [Fluent Reader](https://hyliu.me/fluent-reader/), and shows the unread count in the browser toolbar, opens the standard Miniflux interface. It is a fork of the nice [Miniflux Companion](https://codeberg.org/gbcox/miniflux-companion).
 
 The extension communicates directly with the Miniflux server configured by the user and does not require an intermediary service or external application backend.
 
+
+
 ## Features
 
--   Unread toolbar badge with configurable polling interval and colors
--   Standard Miniflux website mode with configurable landing page
--   New-tab or focus-existing-tab behavior
--   Optional enhanced three-pane reader
--   Collapsible and resizable navigation, entry, and article panes
--   Persistent pane widths and layout preferences
--   Category and feed navigation
--   Feed and category maintenance
--   Contextual search
--   Read and unread controls
--   Mark all visible entries as read
--   Automatic read filters using case-insensitive title keywords
--   Bookmark support
--   Share articles through Telegram or email, or copy the title and link
--   Keyboard navigation
--   Light, dark, and system themes
--   Configurable item limit
--   Immediate badge updates after supported reader actions
--   Direct communication with the user-configured Miniflux server
--   No analytics, advertising, tracking, or remote executable code
+- Unread toolbar badge with configurable polling interval and colors
+- Enhanced three-pane reader
+- Collapsible and resizable navigation, entry, and article panes
+- Persistent pane widths and layout preferences
+- Category and feed navigation
+- Feed and category maintenance
+- Contextual search
+- Read and unread controls
+- Mark all visible entries as read
+- Mark all entries in feed older than the current item as read
+- Automatic read filters using case-insensitive title keywords
+- Bookmark support
+- Keyboard navigation
+- Light, dark, and system themes
+- Configurable item limit
+- Immediate badge updates after supported reader actions
+- Direct communication with the user-configured Miniflux server
+- No analytics, advertising, tracking, or remote executable code
 
 ## Configuration
 
 The Options page provides settings for:
 
--   Miniflux server URL and API token
--   Connection testing and connected account details
--   Standard or enhanced reader mode
--   Item limit and theme
--   Automatic read title keywords
--   Polling interval and tab behavior
--   Badge colors and live preview
+- Miniflux server URL and API token
+- Connection testing and connected account details
+- Standard or enhanced reader mode
+- Item limit and theme
+- Automatic read title keywords
+- Polling interval and tab behavior
+- Badge colors and live preview
 
 ## Enhanced Reader
 
@@ -65,10 +65,10 @@ The developer does not receive or collect user data. Miniflux Companion communic
 
 ## Chrome Web Store permission justifications
 
--   `storage`: Stores all extension settings, the API token, and connected-account details locally in the browser. It also performs a one-time migration of settings saved by older versions from Chrome Sync to local extension storage; nothing remains synchronized after migration.
--   `alarms`: Schedules periodic refreshes of the unread-entry count so the toolbar badge stays current at the polling interval selected by the user.
--   `tabs`: Opens or focuses Miniflux and bundled-reader tabs according to the user's configured behavior.
--   Optional host access: Connects directly to the user-configured Miniflux server after the user grants access to that origin.
+- `storage`: Stores all extension settings, the API token, and connected-account details locally in the browser. It also performs a one-time migration of settings saved by older versions from Chrome Sync to local extension storage; nothing remains synchronized after migration.
+- `alarms`: Schedules periodic refreshes of the unread-entry count so the toolbar badge stays current at the polling interval selected by the user.
+- `tabs`: Opens or focuses Miniflux and bundled-reader tabs according to the user's configured behavior.
+- Optional host access: Connects directly to the user-configured Miniflux server after the user grants access to that origin.
 
 See [privacy-policy.md](privacy-policy.md) for the complete privacy policy.
 

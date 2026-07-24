@@ -430,6 +430,45 @@ const ReadFilterSelect = styled(HeaderSelect)`
 	width: 68px;
 `
 
+const UndoBar = styled.div`
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 12px;
+	font-size: 13px;
+	color: ${(props) => props.theme.text};
+	background-color: ${(props) => props.theme.selectbg};
+	border-bottom: 1px solid ${(props) => props.theme.listheaderbg};
+`
+
+const UndoButton = styled.button`
+	border: none;
+	padding: 3px 8px;
+	border-radius: 3px;
+	font: inherit;
+	font-weight: 600;
+	color: #fff;
+	background: #0078d4;
+	cursor: pointer;
+	&:hover {
+		filter: brightness(1.1);
+	}
+`
+
+const UndoDismiss = styled.button`
+	border: none;
+	padding: 2px;
+	margin-left: auto;
+	border-radius: 3px;
+	color: ${(props) => props.theme.text};
+	background: transparent;
+	cursor: pointer;
+	opacity: 0.5;
+	&:hover {
+		opacity: 1;
+	}
+`
+
 function FeedItemHeader(props) {
 	const markAllRead = () => {
 		props.markRead(props.items)
@@ -519,6 +558,8 @@ function ItemBrowser(props) {
 		localStorage.getItem('filter') === 'a'
 	)
 	const pendingAutoReadIds = useRef(new Set())
+	const [undo, setUndo] = useState(null)
+	const undoTimerRef = useRef(null)
 
 	const reconcileItems = (entryIds = [], status, feedIds = []) => {
 		const affectedIds = new Set(entryIds)
@@ -780,8 +821,50 @@ function ItemBrowser(props) {
 				i.map((item) => item.id),
 				status
 			)
+
+			if (status === 'read') {
+				if (undoTimerRef.current) clearTimeout(undoTimerRef.current)
+				setUndo({ entryIds: i.map((x) => x.id), count: i.length })
+				undoTimerRef.current = setTimeout(
+					() => setUndo(null),
+					30000
+				)
+			}
 		}
 	}
+
+	const undoMarkRead = async () => {
+		if (!undo) return
+		await apiCall('entries', props.errorHandler, {
+			entry_ids: undo.entryIds,
+			status: 'unread',
+		})
+		requestBadgeRefresh()
+		props.updateUnread(
+			items
+				.filter((x) => undo.entryIds.includes(x.id))
+				.map((x) => x.feed.id)
+				.filter((f, index, self) => self.indexOf(f) === index)
+		)
+		reconcileItems(undo.entryIds, 'unread')
+		if (undoTimerRef.current) clearTimeout(undoTimerRef.current)
+		setUndo(null)
+	}
+
+	const dismissUndo = () => {
+		if (undoTimerRef.current) clearTimeout(undoTimerRef.current)
+		setUndo(null)
+	}
+
+	useEffect(() => {
+		return () => {
+			if (undoTimerRef.current) clearTimeout(undoTimerRef.current)
+		}
+	}, [])
+
+	useEffect(() => {
+		dismissUndo()
+	}, [props.currentFeed, props.searchQuery])
 	return (
 		<ItemBrowserContainer>
 			<FeedItemHeader
@@ -805,6 +888,19 @@ function ItemBrowser(props) {
 				feedPaneCollapsed={props.feedPaneCollapsed}
 				onRestoreFeedPane={props.onRestoreFeedPane}
 			/>
+
+			{undo && (
+				<UndoBar>
+					<span>
+						Marked {undo.count} item
+						{undo.count !== 1 ? 's' : ''} as read.
+					</span>
+					<UndoButton onClick={undoMarkRead}>Undo</UndoButton>
+					<UndoDismiss onClick={dismissUndo} aria-label='Dismiss'>
+						<Icon name='dismiss' size={14} />
+					</UndoDismiss>
+				</UndoBar>
+			)}
 
 			<ItemListContainer>
 				{isLoading ? (
