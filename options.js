@@ -57,6 +57,7 @@ function currentSettings() {
 		badgeBgColor: byId('badgeBgColor').value,
 		maxItems: Number(byId('maxItems').value),
 		theme: byId('theme').value,
+		oaMode: document.querySelector('[name=oaMode]:checked').value,
 		autoReadTitleKeywords: keywords,
 		apiToken: byId('apiToken').value,
 	}
@@ -78,6 +79,9 @@ function applySettings(settings, apiToken = byId('apiToken').value) {
 	])
 		byId(id).value = settings[id]
 	byId('apiToken').value = apiToken
+	document.querySelector(
+		`[name=oaMode][value="${settings.oaMode}"]`
+	).checked = true
 	keywords = parseKeywords(settings.autoReadTitleKeywords)
 	renderKeywords()
 	updateBadgePreview()

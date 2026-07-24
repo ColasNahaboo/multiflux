@@ -5,6 +5,7 @@ export const DEFAULT_SETTINGS = Object.freeze({
 	badgeBgColor: '#ff6f00',
 	maxItems: 100,
 	theme: 'auto',
+	oaMode: 'window',
 	autoReadTitleKeywords: [],
 })
 

@@ -282,10 +282,15 @@ function ItemViewer(props) {
 	const [activeShareControls, setActiveShareControls] = useState({})
 
 	const openOrReuseOA = useCallback(async (url) => {
-		const { oaWindowId, oaTabId } = await browser.storage.local.get([
+		const { oaWindowId, oaTabId, oaMode } = await browser.storage.local.get([
 			'oaWindowId',
 			'oaTabId',
+			'oaMode',
 		])
+		if (oaMode === 'tab') {
+			window.open(url, '_blank')
+			return
+		}
 		if (oaTabId) {
 			try {
 				await browser.tabs.get(oaTabId)
