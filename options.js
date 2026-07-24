@@ -55,8 +55,6 @@ function currentSettings() {
 		refresh: Number(byId('refresh').value),
 		badgeTextColor: byId('badgeTextColor').value,
 		badgeBgColor: byId('badgeBgColor').value,
-		tabMode: document.querySelector('[name=tabMode]:checked').value,
-		instantUpdate: byId('instantUpdate').checked,
 		maxItems: Number(byId('maxItems').value),
 		theme: byId('theme').value,
 		autoReadTitleKeywords: keywords,
@@ -80,11 +78,6 @@ function applySettings(settings, apiToken = byId('apiToken').value) {
 	])
 		byId(id).value = settings[id]
 	byId('apiToken').value = apiToken
-	for (const id of ['instantUpdate'])
-		byId(id).checked = Boolean(settings[id])
-	document.querySelector(
-		`[name=tabMode][value="${settings.tabMode}"]`
-	).checked = true
 	keywords = parseKeywords(settings.autoReadTitleKeywords)
 	renderKeywords()
 	updateBadgePreview()

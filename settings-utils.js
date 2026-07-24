@@ -3,8 +3,6 @@ export const DEFAULT_SETTINGS = Object.freeze({
 	refresh: 60,
 	badgeTextColor: '#ffffff',
 	badgeBgColor: '#ff6f00',
-	tabMode: 'new',
-	instantUpdate: false,
 	maxItems: 100,
 	theme: 'auto',
 	autoReadTitleKeywords: [],

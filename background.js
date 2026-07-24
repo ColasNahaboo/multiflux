@@ -19,8 +19,6 @@ function getSettings() {
 		'refresh',
 		'badgeTextColor',
 		'badgeBgColor',
-		'tabMode',
-		'instantUpdate',
 		'maxItems',
 		'theme',
 		'autoReadTitleKeywords',
@@ -174,26 +172,13 @@ initializeServiceWorker()
 /* ---------------- click behavior ---------------- */
 
 browser.action.onClicked.addListener(async () => {
-	const {
-		tabMode = 'new',
-		instantUpdate = false,
-	} = await getSettings()
-
 	const targetUrl = browser.runtime.getURL('index.html')
-	const focusUrl = targetUrl
-
-	if (tabMode === 'focus') {
-		const tabs = await browser.tabs.query({ url: focusUrl })
-		if (tabs.length > 0) {
-			await browser.tabs.update(tabs[0].id, { active: true })
-			await browser.windows.update(tabs[0].windowId, { focused: true })
-
-			if (instantUpdate) updateBadge()
-			return
-		}
+	const tabs = await browser.tabs.query({ url: targetUrl })
+	if (tabs.length > 0) {
+		await browser.tabs.update(tabs[0].id, { active: true })
+		await browser.windows.update(tabs[0].windowId, { focused: true })
+	} else {
+		browser.tabs.create({ url: targetUrl })
 	}
-
-	browser.tabs.create({ url: targetUrl })
-
-	if (instantUpdate) updateBadge()
+	updateBadge()
 })
