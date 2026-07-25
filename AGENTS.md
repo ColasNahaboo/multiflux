@@ -10,10 +10,13 @@ Source: https://codeberg.org/gbcox/miniflux-companion (GPL v3)
 
 Key features beyond upstream:
 - Global Unread pseudo-feed (filters by `hide_globally` flag)
-- OA (Original Article) reusable standalone window positioned to the right
+- OA (Original Article) mode: new window to the right (default) or new tab
 - Vim-style keyboard aliases (q/k for prev, e/j for next, w for open article, ? for help)
 - `t` key: mark all items older than current as read ("unTil now")
+- Undo toast for `t` and `A` batch mark-read operations (30s, cleared on nav)
+- Entry sort direction and category order from Miniflux server preferences
 - Removed enhanced reader toggle (always enabled) and Miniflux web path options
+- Removed tab behavior option (always focus existing tab), instant update always on
 - Default refresh interval: 60 minutes (was 5)
 - Custom Multiflux toolbar icons
 
@@ -101,8 +104,8 @@ npm run format:check
 
 The same codebase produces both Firefox and Chrome extensions via `webextension-polyfill`.
 
-- **Source**: all files use `import browser from 'webextension-polyfill'`, which maps to `browser.*` (Firefox native) or `chrome.*` with Promise wrapping (Chrome).
-- **Polyfill injection**: `background.js` and `options.js` do NOT import the polyfill directly — Firefox uses the native `browser` global. The build script injects the import only for Chrome builds.
+- **Source**: all files use the `browser.*` WebExtensions API (Firefox native). No `import browser` statements in source code.
+- **Polyfill for Chrome**: the build script inlines `webextension-polyfill` as an IIFE into `background.js` and `options.js` for Chrome builds only. The IIFE sets `globalThis.browser` as a side effect. Firefox builds are left untouched (native `browser` global).
 - **Manifest generation**: the build script generates browser-specific manifests:
   - `dist-firefox/manifest.json` — includes `browser_specific_settings`, version_name, cross-browser `background.scripts` + `background.service_worker`
   - `dist-chrome/manifest.json` — strips Firefox-only keys, `service_worker` only
