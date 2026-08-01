@@ -8,6 +8,10 @@
 *.pem
 .DS_Store
 .vscode/
+.env
+.*
+NOTES.md
+/DEV/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
