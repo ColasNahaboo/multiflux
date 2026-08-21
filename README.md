@@ -106,6 +106,8 @@ Or load unpacked for development: `chrome://extensions` → enable **Developer m
 2. Enter your Miniflux server URL and API token, click **Test connection**
 3. Click **Save changes**
 
+The URL can be the server root (for example, `https://example.com`) or the Miniflux API endpoint ending in `/v1`; Multiflux normalizes either form.
+
 The toolbar badge shows the unread count (refreshes every 60 minutes by default).
 
 ## Configuration

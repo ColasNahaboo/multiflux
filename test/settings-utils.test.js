@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
 	beginAutoRead,
+	normalizeServerUrl,
 	parseKeywords,
 	titleMatchesKeywords,
 	testMinifluxConnection,
@@ -43,6 +44,21 @@ test('multiword phrases match case-insensitively', () => {
 	)
 })
 
+test('normalizes Miniflux API endpoints without removing reverse-proxy paths', () => {
+	assert.equal(
+		normalizeServerUrl('https://news.example/v1'),
+		'https://news.example'
+	)
+	assert.equal(
+		normalizeServerUrl('https://news.example/v1/'),
+		'https://news.example'
+	)
+	assert.equal(
+		normalizeServerUrl('https://news.example/miniflux/v1/'),
+		'https://news.example/miniflux'
+	)
+})
+
 test('/v1/me returns typed account details without retaining the token', async () => {
 	let request
 	const account = await testMinifluxConnection(
@@ -63,6 +79,22 @@ test('/v1/me returns typed account details without retaining the token', async (
 	})
 	assert.equal(request[0], 'https://news.example/v1/me')
 	assert.equal('apiToken' in account, false)
+})
+
+test('connection testing accepts a pasted /v1 API endpoint', async () => {
+	let request
+	await testMinifluxConnection(
+		'https://news.example/v1/',
+		'secret',
+		async (...args) => {
+			request = args
+			return {
+				ok: true,
+				json: async () => ({ id: 7, username: 'reader' }),
+			}
+		}
+	)
+	assert.equal(request[0], 'https://news.example/v1/me')
 })
 
 test('/v1/me reports authentication and network failures safely', async () => {

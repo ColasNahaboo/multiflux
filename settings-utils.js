@@ -15,6 +15,7 @@ export function normalizeServerUrl(value) {
 		throw new Error('Invalid URL')
 	url.hash = ''
 	url.search = ''
+	url.pathname = url.pathname.replace(/\/v1\/?$/, '')
 	return url.href.replace(/\/$/, '')
 }
 
