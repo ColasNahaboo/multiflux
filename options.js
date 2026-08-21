@@ -55,6 +55,7 @@ function currentSettings() {
 		refresh: Number(byId('refresh').value),
 		badgeTextColor: byId('badgeTextColor').value,
 		badgeBgColor: byId('badgeBgColor').value,
+		badgeGlobalUnread: byId('badgeGlobalUnread').checked,
 		maxItems: Number(byId('maxItems').value),
 		theme: byId('theme').value,
 		oaMode: document.querySelector('[name=oaMode]:checked').value,
@@ -79,6 +80,7 @@ function applySettings(settings, apiToken = byId('apiToken').value) {
 	])
 		byId(id).value = settings[id]
 	byId('apiToken').value = apiToken
+	byId('badgeGlobalUnread').checked = Boolean(settings.badgeGlobalUnread)
 	document.querySelector(
 		`[name=oaMode][value="${settings.oaMode}"]`
 	).checked = true

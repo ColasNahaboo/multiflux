@@ -3,11 +3,23 @@ export const DEFAULT_SETTINGS = Object.freeze({
 	refresh: 60,
 	badgeTextColor: '#ffffff',
 	badgeBgColor: '#ff6f00',
+	badgeGlobalUnread: false,
 	maxItems: 100,
 	theme: 'auto',
 	oaMode: 'window',
 	autoReadTitleKeywords: [],
 })
+
+export function globalUnreadTotal(unreads, feeds) {
+	const hidden = new Set(
+		feeds.filter((f) => f.hide_globally).map((f) => f.id)
+	)
+	return Object.entries(unreads || {}).reduce(
+		(sum, [id, count]) =>
+			hidden.has(Number(id)) ? sum : sum + (Number(count) || 0),
+		0
+	)
+}
 
 export function normalizeServerUrl(value) {
 	const url = new URL(String(value).trim())

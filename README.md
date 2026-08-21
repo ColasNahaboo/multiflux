@@ -108,7 +108,7 @@ Or load unpacked for development: `chrome://extensions` → enable **Developer m
 
 The URL can be the server root (for example, `https://example.com`) or the Miniflux API endpoint ending in `/v1`; Multiflux normalizes either form.
 
-The toolbar badge shows the unread count (refreshes every 60 minutes by default).
+The toolbar badge shows the unread count (refreshes every 60 minutes by default). With the **Global Unread count** option enabled, it counts only feeds not hidden from the global unread list.
 
 ## Configuration
 
@@ -119,7 +119,7 @@ The Options page provides settings for:
 -   Item limit and theme
 -   Automatic read title keywords
 -   Polling interval and "open original article" tab or window behavior
--   Badge colors and live preview
+-   Badge colors, live preview, and global-unread badge count
 
 ## Reader
 

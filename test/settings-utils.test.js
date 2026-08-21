@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
 	beginAutoRead,
+	globalUnreadTotal,
 	normalizeServerUrl,
 	parseKeywords,
 	titleMatchesKeywords,
@@ -30,6 +31,16 @@ test('parses comma-delimited keywords and rejects case-insensitive duplicates', 
 		'Trump',
 		'climate change',
 	])
+})
+
+test('global unread total excludes feeds hidden from the global list', () => {
+	const unreads = { 1: 3, 2: 5, 3: 0 }
+	const feeds = [
+		{ id: 1, hide_globally: false },
+		{ id: 2, hide_globally: true },
+		{ id: 3, hide_globally: false },
+	]
+	assert.equal(globalUnreadTotal(unreads, feeds), 3)
 })
 
 test('whole words do not match parts of longer words', () => {

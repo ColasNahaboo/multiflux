@@ -1,4 +1,5 @@
 import { migrateSyncStorageToLocal } from './storage-utils.js'
+import { globalUnreadTotal } from './settings-utils.js'
 
 const ALARM_NAME = 'miniflux-refresh'
 const DEFAULT_REFRESH_MINUTES = 5
@@ -19,6 +20,7 @@ function getSettings() {
 		'refresh',
 		'badgeTextColor',
 		'badgeBgColor',
+		'badgeGlobalUnread',
 		'maxItems',
 		'theme',
 		'autoReadTitleKeywords',
@@ -55,6 +57,7 @@ async function updateBadge() {
 			url,
 			badgeTextColor = '#ffffff',
 			badgeBgColor = '#ff6f00',
+			badgeGlobalUnread = false,
 		} = await getSettings()
 		const apiToken = await getApiToken()
 
@@ -91,6 +94,20 @@ async function updateBadge() {
 			}
 		}
 		console.info('Unread count received', { unread })
+
+		if (badgeGlobalUnread) {
+			const feedsResp = await fetch(
+				url.replace(/\/$/, '') + '/v1/feeds',
+				{
+					headers: {
+						'X-Auth-Token': apiToken,
+					},
+				}
+			)
+			if (!feedsResp.ok) throw new Error('HTTP ' + feedsResp.status)
+			unread = globalUnreadTotal(data.unreads, await feedsResp.json())
+			console.info('Global unread count received', { unread })
+		}
 
 		const badgeText = unread > 0 ? String(unread) : ''
 		await browser.action.setBadgeBackgroundColor({ color: badgeBgColor })
@@ -135,7 +152,12 @@ browser.storage.onChanged.addListener((changes, areaName) => {
 	if (areaName !== 'local') return
 	if (changes.refresh) resetAlarm()
 
-	const relevantLocalChanges = ['url', 'badgeTextColor', 'badgeBgColor']
+	const relevantLocalChanges = [
+		'url',
+		'badgeTextColor',
+		'badgeBgColor',
+		'badgeGlobalUnread',
+	]
 	if (relevantLocalChanges.some((key) => changes[key]) || changes.apiToken) {
 		updateBadge()
 	}
