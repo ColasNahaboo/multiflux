@@ -12,6 +12,7 @@ import { lightTheme, darkTheme } from './themes'
 import ClickNHold from './ClickNHold'
 import Icon from './Icon'
 import { PRIMARY_HEADER_HEIGHT } from './layout'
+import { readAlwaysOpenFeedIds, writeAlwaysOpenFeedIds } from './alwaysOpen'
 
 const ErrorDiv = styled.div`
 	padding: 10px;
@@ -247,6 +248,9 @@ function App({ extensionConfig }) {
 	const [readReconciliation, setReadReconciliation] = useState()
 	const [bookmarkReconciliation, setBookmarkReconciliation] = useState()
 	const [viewRevision, setViewRevision] = useState(0)
+	const [alwaysOpenFeedIds, setAlwaysOpenFeedIdsState] = useState(() =>
+		readAlwaysOpenFeedIds(localStorage)
+	)
 	const [feedPaneWidth, setFeedPaneWidth] = useState(getInitialFeedWidth)
 	const [itemPaneWidth, setItemPaneWidth] = useState(getInitialItemWidth)
 	const [feedPaneCollapsed, setFeedPaneCollapsed] = useState(
@@ -263,12 +267,12 @@ function App({ extensionConfig }) {
 			? currentFeed.fetch_url
 			: `categories/${currentFeed.id}/entries`
 		: 'entries'
-			const searchScopeLabel =
-				!currentFeed || currentFeed.id === -1
-					? 'all articles'
-					: currentFeed.id === -3
-					? 'global unread'
-					: currentFeed.title
+	const searchScopeLabel =
+		!currentFeed || currentFeed.id === -1
+			? 'all articles'
+			: currentFeed.id === -3
+			? 'global unread'
+			: currentFeed.title
 
 	useEffect(() => {
 		document.title = currentItem?.title
@@ -310,6 +314,24 @@ function App({ extensionConfig }) {
 		setViewRevision((revision) => revision + 1)
 	}
 
+	const alwaysOpenFeed = currentItem?.feed
+		? feeds.find((f) => f.id === currentItem.feed.id && f.is_feed)
+		: currentFeed?.is_feed
+		? currentFeed
+		: undefined
+	const alwaysOpenActive = alwaysOpenFeed
+		? alwaysOpenFeedIds.includes(alwaysOpenFeed.id)
+		: false
+	const toggleAlwaysOpen = () => {
+		if (!alwaysOpenFeed) return
+		const id = alwaysOpenFeed.id
+		const next = alwaysOpenActive
+			? alwaysOpenFeedIds.filter((x) => x !== id)
+			: [...alwaysOpenFeedIds, id]
+		setAlwaysOpenFeedIdsState(next)
+		writeAlwaysOpenFeedIds(localStorage, next)
+	}
+
 	useEffect(() => {
 		if (searchOpen) searchInputRef.current?.focus()
 	}, [searchOpen])
@@ -349,24 +371,19 @@ function App({ extensionConfig }) {
 					},
 				]
 
-				apiCategories
-					.forEach((category) => {
-						feedTree.push({ ...category, unreads: 0 })
-						feedTree.push(
-							...apiFeeds
-								.filter(
-									(feed) => feed.category?.id === category.id
-								)
-								.map((feed) => ({
-									...feed,
-									category: categoryById.get(
-										feed.category.id
-									),
-									fetch_url: 'feeds/' + feed.id + '/entries',
-									is_feed: true,
-								}))
-						)
-					})
+				apiCategories.forEach((category) => {
+					feedTree.push({ ...category, unreads: 0 })
+					feedTree.push(
+						...apiFeeds
+							.filter((feed) => feed.category?.id === category.id)
+							.map((feed) => ({
+								...feed,
+								category: categoryById.get(feed.category.id),
+								fetch_url: 'feeds/' + feed.id + '/entries',
+								is_feed: true,
+							}))
+					)
+				})
 
 				feedTree.forEach(async (f) => {
 					f.icon_data = createFeedIcon(f.title)
@@ -941,6 +958,13 @@ function App({ extensionConfig }) {
 		},
 		[feeds]
 	)
+	useHotkeys(
+		'shift+v',
+		() => {
+			toggleAlwaysOpen()
+		},
+		[alwaysOpenFeed, alwaysOpenActive, alwaysOpenFeedIds]
+	)
 
 	return (
 		<ThemeProvider
@@ -1132,6 +1156,9 @@ function App({ extensionConfig }) {
 							bookmarkReconciliation={bookmarkReconciliation}
 							onToggleBookmark={toggleBookmark}
 							entrySortDirection={entrySortDirection}
+							alwaysOpenActive={alwaysOpenActive}
+							alwaysOpenFeed={alwaysOpenFeed}
+							onToggleAlwaysOpen={toggleAlwaysOpen}
 						/>
 					</ItemPane>
 					<ColumnResizeHandle
@@ -1171,6 +1198,7 @@ function App({ extensionConfig }) {
 							errorHandler={setError}
 							onSetReadState={setReadState}
 							onToggleBookmark={toggleBookmark}
+							alwaysOpenActive={alwaysOpenActive}
 						/>
 					</ReaderPane>
 				</AppLayout>

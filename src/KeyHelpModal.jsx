@@ -20,6 +20,7 @@ const keyMap = [
 	['s', 'Toggle item sort order'],
 	['f', 'Star/unstar item'],
 	['v/w', 'Open original link in a new tab'],
+	['V', 'Always open original link for this feed'],
 	['c', 'Open comments in a new tab'],
 	['D', 'Toggle light/dark theme'],
 	['r', 'Refresh unread counts'],

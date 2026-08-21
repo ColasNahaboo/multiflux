@@ -43,25 +43,26 @@ TODO: provide screenshots (1280x800 PNG, min 640x400 recommended by AMO)
 
 ### Keyboard Shortcuts
 
-| Key                         | Action                                    |
-| --------------------------- | ----------------------------------------- |
-| `Left / p / k / q`          | Previous item                             |
-| `Right / n / j / e / Space` | Next item                                 |
-| `m`                         | Mark item read/unread                     |
-| `t`                         | Mark all items older than current as read |
-| `A`                         | Mark all visible items as read            |
-| `u`                         | Toggle unread/all items                   |
-| `s`                         | Toggle item sort order (newest/oldest)    |
-| `f`                         | Star/unstar item                          |
-| `v / w`                     | Open original article (OA window or tab)  |
-| `c`                         | Open comments in new tab                  |
-| `r`                         | Refresh unread counts                     |
-| `R`                         | Fetch feeds and refresh feed list         |
-| `D`                         | Toggle light/dark theme                   |
-| `h / ?`                     | Show keyboard shortcuts                   |
-| `Up / Down`                 | Navigate feeds                            |
-| `x`                         | Collapse/uncollapse category              |
-| `U`                         | Toggle unread/all feeds                   |
+| Key                         | Action                                     |
+| --------------------------- | ------------------------------------------ |
+| `Left / p / k / q`          | Previous item                              |
+| `Right / n / j / e / Space` | Next item                                  |
+| `m`                         | Mark item read/unread                      |
+| `t`                         | Mark all items older than current as read  |
+| `A`                         | Mark all visible items as read             |
+| `u`                         | Toggle unread/all items                    |
+| `s`                         | Toggle item sort order (newest/oldest)     |
+| `f`                         | Star/unstar item                           |
+| `v / w`                     | Open original article (OA window or tab)   |
+| `V`                         | Always open original article for this feed |
+| `c`                         | Open comments in new tab                   |
+| `r`                         | Refresh unread counts                      |
+| `R`                         | Fetch feeds and refresh feed list          |
+| `D`                         | Toggle light/dark theme                    |
+| `h / ?`                     | Show keyboard shortcuts                    |
+| `Up / Down`                 | Navigate feeds                             |
+| `x`                         | Collapse/uncollapse category               |
+| `U`                         | Toggle unread/all feeds                    |
 
 ### Motivations
 

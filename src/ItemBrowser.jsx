@@ -510,6 +510,30 @@ function FeedItemHeader(props) {
 							<Icon name='dismiss' />
 						</ControlButton>
 					)}
+					{props.alwaysOpenFeed && (
+						<ControlButton
+							onClick={props.onToggleAlwaysOpen}
+							aria-pressed={props.alwaysOpenActive}
+							title={
+								(props.alwaysOpenActive
+									? 'Stop always opening'
+									: 'Always open') +
+								` original article for ${props.alwaysOpenFeed.title}`
+							}
+							aria-label={`${
+								props.alwaysOpenActive ? 'Disable' : 'Enable'
+							} always open original article for ${
+								props.alwaysOpenFeed.title
+							}`}
+							style={
+								props.alwaysOpenActive
+									? { color: 'var(--accent, #0078d4)' }
+									: undefined
+							}
+						>
+							<Icon name='externalLink' size={16} />
+						</ControlButton>
+					)}
 					<ControlButton
 						onClick={markAllRead}
 						title='Mark all as read'
@@ -667,13 +691,13 @@ function ItemBrowser(props) {
 							'search=' +
 							encodeURIComponent(props.searchQuery),
 				  ]
-			: props.currentFeed.fetch_url
-			? [props.currentFeed.fetch_url]
-			: props.currentFeed.id === -3
-			? props.feeds
-					.filter((f) => f.is_feed && !f.hide_globally)
-					.map((f) => f.fetch_url)
-			: props.feeds
+				: props.currentFeed.fetch_url
+				? [props.currentFeed.fetch_url]
+				: props.currentFeed.id === -3
+				? props.feeds
+						.filter((f) => f.is_feed && !f.hide_globally)
+						.map((f) => f.fetch_url)
+				: props.feeds
 						.filter((f) => f.category)
 						.filter((f) => f.category.id === props.currentFeed.id)
 						.map((f) => f.fetch_url)
@@ -825,10 +849,7 @@ function ItemBrowser(props) {
 			if (status === 'read') {
 				if (undoTimerRef.current) clearTimeout(undoTimerRef.current)
 				setUndo({ entryIds: i.map((x) => x.id), count: i.length })
-				undoTimerRef.current = setTimeout(
-					() => setUndo(null),
-					30000
-				)
+				undoTimerRef.current = setTimeout(() => setUndo(null), 30000)
 			}
 		}
 	}
@@ -887,6 +908,9 @@ function ItemBrowser(props) {
 				errorHandler={props.errorHandler}
 				feedPaneCollapsed={props.feedPaneCollapsed}
 				onRestoreFeedPane={props.onRestoreFeedPane}
+				alwaysOpenFeed={props.alwaysOpenFeed}
+				alwaysOpenActive={props.alwaysOpenActive}
+				onToggleAlwaysOpen={props.onToggleAlwaysOpen}
 			/>
 
 			{undo && (

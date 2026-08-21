@@ -282,11 +282,9 @@ function ItemViewer(props) {
 	const [activeShareControls, setActiveShareControls] = useState({})
 
 	const openOrReuseOA = useCallback(async (url) => {
-		const { oaWindowId, oaTabId, oaMode } = await browser.storage.local.get([
-			'oaWindowId',
-			'oaTabId',
-			'oaMode',
-		])
+		const { oaWindowId, oaTabId, oaMode } = await browser.storage.local.get(
+			['oaWindowId', 'oaTabId', 'oaMode']
+		)
 		if (oaMode === 'tab') {
 			window.open(url, '_blank')
 			return
@@ -352,6 +350,16 @@ function ItemViewer(props) {
 	useEffect(() => {
 		if (articleScrollRef.current) articleScrollRef.current.scrollTop = 0
 	}, [props.currentItem])
+
+	const openedItemRef = useRef()
+	useEffect(() => {
+		if (!props.alwaysOpenActive || !item) return
+		if (openedItemRef.current === item.id) return
+		const url = getOriginalUrl(item)
+		if (!url) return
+		openedItemRef.current = item.id
+		openOrReuseOA(url)
+	}, [item?.id, props.alwaysOpenActive])
 
 	useEffect(
 		() => () => {

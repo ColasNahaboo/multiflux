@@ -23,25 +23,26 @@ Key features beyond upstream:
 
 ### Keyboard Shortcuts
 
-| Key                         | Action                             |
-| --------------------------- | ---------------------------------- |
-| `Left / p / k / q`          | Previous item                      |
-| `Right / n / j / e / Space` | Next item                          |
-| `m`                         | Mark item read/unread              |
-| `t`                         | Mark all older items read          |
-| `A`                         | Mark all items read                |
-| `u`                         | Toggle unread/all items            |
-| `s`                         | Toggle item sort order             |
-| `f`                         | Star/unstar item                   |
-| `v / w`                     | Open original article in OA window |
-| `c`                         | Open comments in new tab           |
-| `r`                         | Refresh unread counts              |
-| `R`                         | Fetch feeds and refresh feed list  |
-| `D`                         | Toggle light/dark theme            |
-| `h / ?`                     | Show keyboard shortcuts            |
-| `Up/Down`                   | Navigate feeds                     |
-| `x`                         | Collapse/uncollapse category       |
-| `U`                         | Toggle unread/all feeds            |
+| Key                         | Action                                     |
+| --------------------------- | ------------------------------------------ |
+| `Left / p / k / q`          | Previous item                              |
+| `Right / n / j / e / Space` | Next item                                  |
+| `m`                         | Mark item read/unread                      |
+| `t`                         | Mark all older items read                  |
+| `A`                         | Mark all items read                        |
+| `u`                         | Toggle unread/all items                    |
+| `s`                         | Toggle item sort order                     |
+| `f`                         | Star/unstar item                           |
+| `v / w`                     | Open original article in OA window         |
+| `V`                         | Always open original article for this feed |
+| `c`                         | Open comments in new tab                   |
+| `r`                         | Refresh unread counts                      |
+| `R`                         | Fetch feeds and refresh feed list          |
+| `D`                         | Toggle light/dark theme                    |
+| `h / ?`                     | Show keyboard shortcuts                    |
+| `Up/Down`                   | Navigate feeds                             |
+| `x`                         | Collapse/uncollapse category               |
+| `U`                         | Toggle unread/all feeds                    |
 
 ## Project Structure
 
