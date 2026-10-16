@@ -1,10 +1,10 @@
 # Multiflux — Privacy Policy
 
-Miniflux Companion does not transmit user data to or collect user data for the developer, and it does not sell or share personal data. Extension functionality runs locally in the browser. The extension communicates only with the Miniflux server configured by the user and with external share handlers explicitly invoked by the user, such as an email application or Telegram.
+Multiflux does not transmit user data to or collect user data for the developer, and it does not sell or share personal data. Extension functionality runs locally in the browser. The extension communicates only with the Miniflux server configured by the user and with external share handlers explicitly invoked by the user, such as an email application or Telegram.
 
 ## Data storage
 
-All extension settings and connected-account data are stored in local extension storage with `chrome.storage.local`. This includes the Miniflux server URL, API token, connected-account username, user ID and server hostname, refresh interval, badge colors, opening and tab behavior, reader settings, item limit, theme, and automatic-read keywords. Nothing is synchronized through Chrome Sync.
+All extension settings and connected-account data are stored in local extension storage (`browser.storage.local`). This includes the Miniflux server URL, API token, connected-account username, user ID and server hostname, refresh interval, badge colors, opening and tab behavior, reader settings, item limit, theme, and automatic-read keywords. Nothing is synchronized through browser sync (Firefox Sync or Chrome Sync).
 
 Older versions stored some settings, including a legacy API token under the `password` key, in synchronized storage. The extension migrates those values once, preserves existing local values, and removes the synchronized copies only after any required local write succeeds.
 
