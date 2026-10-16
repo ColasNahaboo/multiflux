@@ -6,7 +6,23 @@ Source: https://codeberg.org/gbcox/miniflux-companion (GPL v3)
 
 ## Current State
 
-**v0.1.0** — personal beta, Firefox + Chrome cross-browser builds.
+**v1.0.0** — released for AMO (Firefox Add-ons) submission. Firefox + Chrome cross-browser builds.
+
+### Publication Progress (in progress)
+
+Done:
+
+-   Public GitHub repo: https://github.com/ColasNahaboo/multiflux (remote `origin`, tags pushed, v1.0.0 tagged)
+-   `privacy-policy.md` rebranded (Multiflux, `browser.storage.local`, Firefox+Chrome sync wording)
+-   Version bumped to 1.0.0 everywhere; `npm test` green; `web-ext lint` on `dist-firefox`: 0 errors / 46 warnings (45 × `UNSAFE_VAR_ASSIGNMENT` from minified React bundle — accepted by AMO; 1 × `background.service_worker` unsupported in Firefox — expected for cross-browser manifest)
+-   `.env` keys renamed `AMO_JWT_*` → `WEB_EXT_API_KEY` / `WEB_EXT_API_SECRET` (what web-ext actually reads)
+
+Remaining before AMO submission:
+
+-   **Screenshots (blocked)**: 4 × 1280x800 PNG (reader light, OA window, options page, dark theme) against a **dedicated Miniflux demo server** (NOT the personal server — privacy). Commit to `docs/screenshots/`, replace `TODO:` placeholders in README
+-   Sign + upload: `npm run build:firefox && source .env && npx web-ext sign --source-dir=dist-firefox --channel=listed --upload-source-code <git-archive-zip>` — first upload permanently registers ID `multiflux@nahaboo.net` on AMO
+-   Manual AMO listing form (summary, README description, screenshots, category Feeds/News & Blogging, homepage/support URLs, privacy policy raw GitHub link, GPL-3.0-or-later, data collection none)
+-   Post-acceptation: add AMO listing link to README; Chrome Web Store later (promo tiles 440x280/920x680/1400x560 needed then)
 
 Key features beyond upstream:
 
@@ -126,7 +142,7 @@ Plain semver (`0.0.1`, `0.1.0`, `1.0.0`). Same version in `manifest.json`, `pack
 
 ## Publishing (AMO + Chrome Web Store)
 
-Publishing is **NOT done yet** — accounts and store listings don't exist. The full workflow lives in `DEV/workflow.md` (gitignored, local-only). Summary:
+Publishing is **in progress**: AMO developer account exists (keys in `.env`), public GitHub repo is live, v1.0.0 tagged. Chrome Web Store account not created yet. The full workflow lives in `DEV/workflow.md` (gitignored, local-only). Summary:
 
 -   **README.md is the store-listing source of truth** — its body is pasted into the AMO description (markdown) and the CWS detailed description, and it contains `TODO:` placeholders for screenshots and store URLs.
 -   **Firefox (AMO)**: `npm run build:firefox` then `npm run sign:firefox` (runs `web-ext sign --source-dir=dist-firefox --channel=listed`). AMO requires **source code submission** because the Vite output is minified — pass `--upload-source-code <archive>` (e.g. `git archive --format=zip -o /tmp/multiflux-source.zip HEAD`). Then fill the listing manually on the AMO devhub (summary, description, screenshots 1280x800, category, privacy URL).
