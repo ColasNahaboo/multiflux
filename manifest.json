@@ -4,7 +4,7 @@
   "description": "Unread badge and optional three-pane reader for your self-hosted Miniflux server.",
   "version": "0.1.2",
   "version_name": "0.1.2",
-  "homepage_url": "https://github.com/colas/multiflux",
+  "homepage_url": "https://github.com/ColasNahaboo/multiflux",
 
   "browser_specific_settings": {
     "gecko": {

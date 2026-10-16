@@ -160,7 +160,7 @@ The same codebase produces both Firefox and Chrome extensions via [webextension-
 
 ## Getting Help
 
--   **Issues**: Report bugs or request features on the [GitHub issues page](https://github.com/colas/multiflux/issues)
+-   **Issues**: Report bugs or request features on the [GitHub issues page](https://github.com/ColasNahaboo/multiflux/issues)
 -   **Keyboard shortcuts**: Press `?` or `h` in the reader to see all shortcuts
 -   **Configuration**: Right-click the extension icon → Options, or click the gear icon in the reader
 
