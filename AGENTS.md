@@ -57,7 +57,7 @@ src/runtimeConfig.js  Config singleton
 src/layout.js         Pane layout persistence (localStorage)
 src/themes.js         Light/dark/auto themes
 public/icons/         Share-button icons (copied to dist by Vite)
-test/                 node --test suites (config parser, settings, alwaysOpen)
+test/                 node --test suites (config, settings, host geometry, alwaysOpen)
 config.example.yaml   Documented sample config
 ```
 
@@ -68,7 +68,7 @@ npm install
 npm test              # node --test
 npm run format:check  # prettier
 npm run build         # vite build → dist/
-npm run deploy        # rsync dist/ → m:/www/multiflux/ (keeps config.yaml)
+npm run deploy        # build + rsync --delete dist/ → m:/www/multiflux/
 npm run dev           # vite dev server (needs a config.yaml in dist/ or public/)
 ```
 
@@ -182,7 +182,9 @@ page to apply edits. The settings gear button just reloads.
 ## Versioning
 
 Plain semver in `package.json` (manifest.json is gone). Git tags `v{version}`.
-The extension line ended at v1.0.0; the web app restarts at v2.0.0.
+The extension line ended at v1.0.0; the web app restarts at v2.0.0
+(currently `2.0.0-dev.1`). README.md is user-facing (install/upgrade); this
+file is the maintainer/agent guide.
 
 ## History / Upstream
 

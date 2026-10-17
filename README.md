@@ -6,35 +6,122 @@ Keyboard-first three-pane web reader for your self-hosted
 ## What it is
 
 A static web app you deploy next to your Miniflux instance (e.g. at
-`https://rss.example.org/mf/`). It talks to the Miniflux REST API directly from
-the browser using an API token kept in a hand-edited `config.yaml` on your
-server — no backend, no accounts, no store, no build services.
+`https://rss.example.org/mf/`). The browser talks to the Miniflux REST API
+directly using an API token kept in a hand-edited `config.yaml` on your
+server — no backend, no accounts, no store, no telemetry.
 
 -   Three panes: categories/feeds → entry list → article content
 -   Global Unread pseudo-feed honoring Miniflux's "hide globally" flag
--   Vim-style keyboard navigation (`q/e/w/?` aliases on top of `hjkl`)
--   Original-Article mode: articles open in a reusable side window (or tab)
+-   Vim-style keyboard navigation (`hjkl` plus `q/e/w/?` aliases)
+-   Original-Article mode: articles open in a reusable side window whose
+    geometry you control, or in a new tab
 -   Batch mark-read with 30s undo toasts, auto-read by title keywords
 -   Light/dark/auto themes; sort and category order from server preferences
 
-## Quick start
+## Requirements
 
-1.  `npm install && npm run build`
-2.  Copy `dist/*` to a directory served by the web server in front of your
-    Miniflux (same host or any origin — the API is CORS-enabled).
-3.  Copy `config.example.yaml` to `config.yaml` next to `index.html`, fill in
-    `url` and `apiToken` (Miniflux → Settings → API).
-4.  **Protect `config.yaml`** (Basic auth and/or LAN-only) — it contains the
-    token. See `AGENTS.md` for an Apache example.
-5.  Open the page.
+-   A Miniflux instance (v2) with the API enabled (Settings → API) — you need
+    an API token
+-   Any static web server (Apache, nginx, Caddy…) able to serve a directory
+    of files; Node.js ≥ 20 only to build
 
-## Development
+> The Miniflux API sends `Access-Control-Allow-Origin: *`, so the app works
+> whether you host it on the same origin as Miniflux or anywhere else.
+
+## Installation
+
+1.  **Build**
+
+    ```bash
+    git clone https://github.com/ColasNahaboo/multiflux && cd multiflux
+    npm install && npm run build   # output in dist/
+    ```
+
+2.  **Deploy the files** to a directory served by your web server, e.g.
+    `/var/www/multiflux`, reachable under some path such as `/mf/`. For
+    Apache behind which Miniflux is reverse-proxied, this goes **before** the
+    catch-all `ProxyPass`:
+
+    ```apache
+    Alias /mf /var/www/multiflux
+    <Directory /var/www/multiflux>
+        Require all granted
+    </Directory>
+
+    ProxyPass /mf !          # mandatory: exempt /mf from the Miniflux proxy
+    ProxyPass / http://127.0.0.1:8080/
+    ```
+
+3.  **Configure** — copy `config.example.yaml` to a file served as
+    `/mf/config.yaml`. Keep it **outside** the deployed directory (e.g.
+    `/etc/multiflux/config.yaml` with its own `Alias`) so upgrades can never
+    delete it:
+
+    ```yaml
+    url: https://rss.example.org
+    apiToken: <your Miniflux API token>
+    # theme: auto | light | dark
+    # oaMode: window | tab
+    # oaGeometry: right | half | x,y,w,h
+    # maxItems: 100
+    # refresh: 60
+    ```
+
+4.  **Protect `config.yaml`** — it contains the API token. Restrict it to
+    your LAN, or put it behind Basic auth (`RequireAny` of both is handy):
+
+    ```apache
+    Alias /mf/config.yaml /etc/multiflux/config.yaml
+    <Directory /etc/multiflux>
+        Require all granted
+    </Directory>
+    <Location /mf/config.yaml>
+        AuthType Basic
+        AuthName "Multiflux"
+        AuthUserFile /etc/apache2/.multiflux.htpasswd
+        <RequireAny>
+            Require ip 192.168.1.0/24
+            Require valid-user
+        </RequireAny>
+    </Location>
+    ```
+
+5.  Open `https://rss.example.org/mf/`. The page loads its config at startup;
+    reload after any edit.
+
+## Upgrading
 
 ```bash
-npm test              # node --test
-npm run dev           # vite dev server
-npm run format:check  # prettier
+git pull
+npm install && npm test
+rsync -a --delete dist/ yourserver:/var/www/multiflux/
 ```
+
+Nothing else: settings live in `config.yaml` (outside the synced directory),
+per-browser state (theme override, pane sizes, always-open feeds) lives in
+`localStorage`. There is no database and no server component to migrate.
+Check the release notes for new `config.yaml` keys.
+
+## Keyboard shortcuts
+
+| Key                         | Action                                     |
+| --------------------------- | ------------------------------------------ |
+| `Left / p / k / q`          | Previous item                              |
+| `Right / n / j / e / Space` | Next item                                  |
+| `m`                         | Mark item read/unread                      |
+| `t`                         | Mark all older items read (with undo)      |
+| `A`                         | Mark all items read (with undo)            |
+| `u` / `U`                   | Toggle unread/all items / feeds            |
+| `s`                         | Toggle item sort order                     |
+| `f`                         | Star/unstar item                           |
+| `v / w`                     | Open original article in OA window         |
+| `V`                         | Always open original article for this feed |
+| `c`                         | Open comments in new tab                   |
+| `r` / `R`                   | Refresh counts / fetch feeds               |
+| `Shift+D`                   | Toggle light/dark theme                    |
+| `h / ?`                     | Keyboard help                              |
+| `Up/Down`                   | Navigate feeds                             |
+| `x`                         | Collapse/uncollapse category               |
 
 ## History
 
