@@ -1,15 +1,3 @@
-export const DEFAULT_SETTINGS = Object.freeze({
-	url: '',
-	refresh: 60,
-	badgeTextColor: '#ffffff',
-	badgeBgColor: '#ff6f00',
-	badgeGlobalUnread: false,
-	maxItems: 100,
-	theme: 'auto',
-	oaMode: 'window',
-	autoReadTitleKeywords: [],
-})
-
 export function globalUnreadTotal(unreads, feeds) {
 	const hidden = new Set(
 		feeds.filter((f) => f.hide_globally).map((f) => f.id)

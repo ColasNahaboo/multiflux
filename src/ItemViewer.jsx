@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { formatDate } from './lib/util'
+import { openOriginalArticle } from './lib/host'
 import styled from 'styled-components'
 import { useHotkeys } from 'react-hotkeys-hook'
 import Icon from './Icon'
@@ -281,46 +282,8 @@ function ItemViewer(props) {
 	const shareFeedbackTimersRef = useRef({})
 	const [activeShareControls, setActiveShareControls] = useState({})
 
-	const openOrReuseOA = useCallback(async (url) => {
-		const { oaWindowId, oaTabId, oaMode } = await browser.storage.local.get(
-			['oaWindowId', 'oaTabId', 'oaMode']
-		)
-		if (oaMode === 'tab') {
-			window.open(url, '_blank')
-			return
-		}
-		if (oaTabId) {
-			try {
-				await browser.tabs.get(oaTabId)
-				await browser.tabs.update(oaTabId, { url, active: true })
-				await browser.windows.update(oaWindowId, { focused: true })
-				return
-			} catch {}
-		}
-		const current = await browser.windows.getCurrent()
-		const win = await browser.windows.create({
-			url,
-			left: current.left + current.width,
-			top: current.top,
-			width: Math.min(current.width, 900),
-			height: current.height || 800,
-		})
-		await browser.storage.local.set({
-			oaWindowId: win.id,
-			oaTabId: win.tabs[0].id,
-		})
-	}, [])
-
-	useEffect(() => {
-		const handler = async (tabId) => {
-			const { oaTabId } = await browser.storage.local.get('oaTabId')
-			if (tabId === oaTabId)
-				await browser.storage.local.remove(['oaWindowId', 'oaTabId'])
-		}
-		if (browser.tabs?.onRemoved) {
-			browser.tabs.onRemoved.addListener(handler)
-			return () => browser.tabs.onRemoved.removeListener(handler)
-		}
+	const openOrReuseOA = useCallback((url) => {
+		openOriginalArticle(url)
 	}, [])
 
 	useHotkeys('f', () => toggleStar(), [item])

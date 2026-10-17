@@ -1,43 +1,112 @@
 # Multiflux
 
-Port of the Miniflux Companion Chrome extension to Firefox.
+Three-pane web reader for a self-hosted [Miniflux](https://miniflux.app/)
+server, with a keyboard-first (Vim-style) interaction model.
 
-Source: https://codeberg.org/gbcox/miniflux-companion (GPL v3)
+v1.x was published as a Firefox/Chrome extension; **the extension is retired**
+(Nov 2026). The full extension codebase is preserved in the sibling checkout
+`../multiflux-ext` (git history also intact here up to the port commit).
+The web app reuses ~95% of the extension's React UI.
 
-## Current State
+Origin: fork of https://codeberg.org/gbcox/miniflux-companion (GPL v3),
+heavily modified. License: GPL-3.0-or-later.
 
-**v1.0.0** — released for AMO (Firefox Add-ons) submission. Firefox + Chrome cross-browser builds.
+## Architecture
 
-### Publication Progress (in progress)
+```
+Browser ──https──► rss.nahaboo.org (Apache on m)
+                     ├─ /mf/*  ──► static files in /www/multiflux
+                     └─ /*     ──► Miniflux 127.0.0.1:8080
+Browser JS calls the Miniflux REST API DIRECTLY (cross-origin fetch with
+X-Auth-Token). Miniflux sends Access-Control-Allow-Origin: * on /v1, so no
+proxy is needed. The app never talks to Apache except for its own files.
+```
 
-Done:
+Key facts (verified against Miniflux source + live server, 2026-10):
 
--   Public GitHub repo: https://github.com/ColasNahaboo/multiflux (remote `origin`, tags pushed, v1.0.0 tagged)
--   `privacy-policy.md` rebranded (Multiflux, `browser.storage.local`, Firefox+Chrome sync wording)
--   Version bumped to 1.0.0 everywhere; `npm test` green; `web-ext lint` on `dist-firefox`: 0 errors / 46 warnings (45 × `UNSAFE_VAR_ASSIGNMENT` from minified React bundle — accepted by AMO; 1 × `background.service_worker` unsupported in Firefox — expected for cross-browser manifest)
--   `.env` keys renamed `AMO_JWT_*` → `WEB_EXT_API_KEY` / `WEB_EXT_API_SECRET` (what web-ext actually reads)
+-   `/v1` accepts ONLY `X-Auth-Token` or HTTP Basic — never session cookies
+    (session-cookie passthrough is impossible; CSRF middleware covers the HTML
+    UI only).
+-   `/v1` sends `Access-Control-Allow-Origin: *` allowing `X-Auth-Token`, so
+    any origin can call the API with a token. This is why no Go backend exists.
+-   The token lives in `config.yaml` next to `index.html`, fetched at startup
+    (`src/lib/config.js` parses a minimal YAML subset — flat keys, block
+    lists, comments). Settings are edited by hand; there is NO settings page.
+-   `config.yaml` is protected by Apache: `<RequireAny>` LAN IP OR Basic auth
+    (see DEPLOY below). Theme override persists in `localStorage`
+    (`multiflux_theme`); always-open-original feed IDs too (`always_open_original_feeds`).
 
-Remaining before AMO submission:
+## Project Structure
 
--   **Screenshots (blocked)**: 4 × 1280x800 PNG (reader light, OA window, options page, dark theme) against a **dedicated Miniflux demo server** (NOT the personal server — privacy). Commit to `docs/screenshots/`, replace `TODO:` placeholders in README
--   Sign + upload: `npm run build:firefox && source .env && npx web-ext sign --source-dir=dist-firefox --channel=listed --upload-source-code <git-archive-zip>` — first upload permanently registers ID `multiflux@nahaboo.net` on AMO
--   Manual AMO listing form (summary, README description, screenshots, category Feeds/News & Blogging, homepage/support URLs, privacy policy raw GitHub link, GPL-3.0-or-later, data collection none)
--   Post-acceptation: add AMO listing link to README; Chrome Web Store later (promo tiles 440x280/920x680/1400x560 needed then)
+```
+index.html            Vite entry
+src/index.jsx         Loads config.yaml, renders App
+src/App.jsx           Three-pane app (feeds / entries / article)
+src/FeedBrowser.jsx   Navigation pane
+src/FeedContextMenu.jsx
+src/ItemBrowser.jsx   Entry list pane
+src/ItemViewer.jsx    Article pane (OA window, share buttons)
+src/KeyHelpModal.jsx  Keyboard shortcuts help
+src/lib/util.jsx      Miniflux API client (fetch wrapper)
+src/lib/settings.js   Keyword matching, auto-read, URL normalize, unread totals
+src/lib/config.js     config.yaml fetch + minimal YAML parser + defaults
+src/lib/host.js       Host adapter: OA window reuse (window.open named), theme storage
+src/lib/alwaysOpen.js Always-open-original feed IDs (localStorage)
+src/runtimeConfig.js  Config singleton
+src/layout.js         Pane layout persistence (localStorage)
+src/themes.js         Light/dark/auto themes
+public/icons/         Share-button icons (copied to dist by Vite)
+test/                 node --test suites (config parser, settings, alwaysOpen)
+config.example.yaml   Documented sample config
+```
 
-Key features beyond upstream:
+## Build & Test Commands
 
--   Global Unread pseudo-feed (filters by `hide_globally` flag)
--   OA (Original Article) mode: new window to the right (default) or new tab
--   Vim-style keyboard aliases (q/k for prev, e/j for next, w for open article, ? for help)
--   `t` key: mark all items older than current as read ("unTil now")
--   Undo toast for `t` and `A` batch mark-read operations (30s, cleared on nav)
--   Entry sort direction and category order from Miniflux server preferences
--   Removed enhanced reader toggle (always enabled) and Miniflux web path options
--   Removed tab behavior option (always focus existing tab), instant update always on
--   Default refresh interval: 60 minutes (was 5)
--   Custom Multiflux toolbar icons
+```bash
+npm install
+npm test              # node --test
+npm run format:check  # prettier
+npm run build         # vite build → dist/
+npm run deploy        # rsync dist/ → m:/www/multiflux/ (keeps config.yaml)
+npm run dev           # vite dev server (needs a config.yaml in dist/ or public/)
+```
 
-### Keyboard Shortcuts
+## Configuration (`config.yaml`)
+
+Placed next to `index.html` in the deploy dir (gitignored; see
+`config.example.yaml`). Keys: `url`, `apiToken` (required); `theme`
+(auto|light|dark), `oaMode` (window|tab), `maxItems` (10..1000), `refresh`
+(minutes, 0=off), `autoReadTitleKeywords` (block list). Reload the page to
+apply edits. The settings gear button just reloads.
+
+## Deploy (host `m`)
+
+-   App dir: `/www/multiflux` (rsync of `dist/`, config.yaml excluded)
+-   Apache `rss.conf` additions inside the 443 vhost, BEFORE the catch-all
+    `ProxyPass /`:
+
+```apache
+    Alias /mf /www/multiflux
+    <Directory /www/multiflux>
+        Require all granted
+        # config.yaml holds the API token — LAN or Basic auth required
+        <Files "config.yaml">
+            AuthType Basic
+            AuthName "Multiflux"
+            AuthUserFile /etc/apache2/.multiflux.htpasswd
+            <RequireAny>
+                Require ip 192.168.1.0/24
+                Require valid-user
+            </RequireAny>
+        </Files>
+    </Directory>
+```
+
+-   URL: https://rss.nahaboo.org/mf/
+-   `config.yaml` must be served as text (Apache default text/plain is fine;
+    the loader rejects HTML bodies).
+
+## Keyboard Shortcuts
 
 | Key                         | Action                                     |
 | --------------------------- | ------------------------------------------ |
@@ -54,163 +123,42 @@ Key features beyond upstream:
 | `c`                         | Open comments in new tab                   |
 | `r`                         | Refresh unread counts                      |
 | `R`                         | Fetch feeds and refresh feed list          |
-| `D`                         | Toggle light/dark theme                    |
+| `Shift+D`                   | Toggle light/dark theme                    |
 | `h / ?`                     | Show keyboard shortcuts                    |
 | `Up/Down`                   | Navigate feeds                             |
 | `x`                         | Collapse/uncollapse category               |
 | `U`                         | Toggle unread/all feeds                    |
 
-## Project Structure
+## Features beyond upstream miniflux-companion
 
-Root-level extension files (static, not in Vite build):
-manifest.json — Firefox MV3 manifest (cross-browser)
-background.js — Background script (badge, alarms, click handler)
-options.html — Options page (inline CSS)
-options.js — Options page logic
-settings-utils.js — Shared: defaults, URL parse, keywords, connection test
-storage-utils.js — Shared: migration from browser.storage.sync → local
-
-src/ (Vite + React 19 enhanced three-pane reader):
-index.jsx — Entry: loads settings, renders App
-App.jsx — Main reader app (three-pane layout)
-FeedBrowser.jsx — Category/feed navigation pane
-FeedContextMenu.jsx — Context menus for feeds
-ItemBrowser.jsx — Entry list pane
-ItemViewer.jsx — Article content pane
-ClickNHold.jsx — Long-press utility component
-Icon.jsx — Icon wrapper
-KeyHelpModal.jsx — Keyboard shortcuts help
-runtimeConfig.js — Global config singleton
-globalStyles.js — Global styled-components styles
-layout.js — Pane layout persistence
-readStateStyles.js — Read/unread CSS
-themes.js — Light/dark/auto theme
-lib/util.jsx — Miniflux API client (fetch + badge refresh)
-
-test/ — Node.js tests (node --test)
-
-## Build & Test Commands
-
-```bash
-# Install dependencies
-npm install
-
-# Run tests
-npm test
-
-# Run the extension in a persistent Firefox profile (build first, then launch)
-npm run dev:firefox
-
-# Run the extension in a Chromium window
-npm run dev:chromium
-
-# Build the Vite-enhanced reader + static files for both browsers
-npm run build
-
-# Build for a single browser
-npm run build:firefox
-npm run build:chrome
-
-# Lint the extension
-web-ext lint --source-dir=.
-
-# Check formatting
-npm run format:check
-```
-
-## Cross-Browser Build
-
-The same codebase produces both Firefox and Chrome extensions via `webextension-polyfill`.
-
--   **Source**: all files use the `browser.*` WebExtensions API (Firefox native). No `import browser` statements in source code.
--   **Polyfill for Chrome**: the build script inlines `webextension-polyfill` as an IIFE into `background.js` and `options.js` for Chrome builds only. The IIFE sets `globalThis.browser` as a side effect. Firefox builds are left untouched (native `browser` global).
--   **Manifest generation**: the build script generates browser-specific manifests:
-    -   `dist-firefox/manifest.json` — includes `browser_specific_settings`, version_name, cross-browser `background.scripts` + `background.service_worker`
-    -   `dist-chrome/manifest.json` — strips Firefox-only keys, `service_worker` only
--   **Output**:
-    -   `web-ext-artifacts/multiflux-{version_name}-firefox.zip`
-    -   `web-ext-artifacts/multiflux-{version_name}-chrome.zip`
--   **Vite output** is shared — the React app is identical for both browsers, only the manifest + polyfill differ
-
-## Versioning
-
-Plain semver (`0.0.1`, `0.1.0`, `1.0.0`). Same version in `manifest.json`, `package.json`, and `package-lock.json`. The `gecko.version_name` in `manifest.json` mirrors the version (human-readable string on AMO).
-
--   `npm run build` packages `web-ext-artifacts/multiflux-{version}-{firefox,chrome}.zip`
--   Git tags use `v{version}` format (e.g. `v0.0.1`)
--   Increment per semantic change: patch for fixes, minor for features, major for breaking changes
-
-## Publishing (AMO + Chrome Web Store)
-
-Publishing is **in progress**: AMO developer account exists (keys in `.env`), public GitHub repo is live, v1.0.0 tagged. Chrome Web Store account not created yet. The full workflow lives in `DEV/workflow.md` (gitignored, local-only). Summary:
-
--   **README.md is the store-listing source of truth** — its body is pasted into the AMO description (markdown) and the CWS detailed description, and it contains `TODO:` placeholders for screenshots and store URLs.
--   **Firefox (AMO)**: `npm run build:firefox` then `npm run sign:firefox` (runs `web-ext sign --source-dir=dist-firefox --channel=listed`). AMO requires **source code submission** because the Vite output is minified — pass `--upload-source-code <archive>` (e.g. `git archive --format=zip -o /tmp/multiflux-source.zip HEAD`). Then fill the listing manually on the AMO devhub (summary, description, screenshots 1280x800, category, privacy URL).
--   **Chrome (CWS)**: `npm run build:chrome`, upload `web-ext-artifacts/multiflux-{version}-chrome.zip` to https://chrome.google.com/webstore/devconsole manually (no CLI signing). Requires summary (≤132 chars), screenshots, promo tiles (440x280, 920x680, 1400x560), privacy URL.
--   **Credentials**: `web-ext` reads **`WEB_EXT_API_KEY` / `WEB_EXT_API_SECRET`** from the environment (the `WEB_EXT_` prefix — do NOT use `AMO_JWT_*`). These go in `.env` (gitignored), loaded via `source .env`.
--   **AMO API keys**: generated at https://addons.mozilla.org/developers/addon/api/key/ (the page labels them "JWT issuer"/"JWT secret" — map issuer → `WEB_EXT_API_KEY`, secret → `WEB_EXT_API_SECRET`).
--   **Account URLs**: AMO devhub https://addons.mozilla.org/en-US/developers/addon/, CWS devconsole https://chrome.google.com/webstore/devconsole.
--   **First-submission checklist**: screenshots, CWS tiles, privacy policy URL (raw GitHub link to `privacy-policy.md`), source archive, `npm test` green + `web-ext lint` clean.
-
-## Gitignore Notes
-
-`.gitignore` ignores `.env`, all dotfiles (`.*`), `NOTES.md`, and `/DEV/`. `DEV/workflow.md` (publishing workflow) and `NOTES.md` (personal notes) are intentionally local-only and never committed.
-
-## Upstream Upgrades
-
-See `UPGRADE.md` for the full step-by-step workflow. Quick summary:
-
-1. `git fetch upstream --tags`
-2. `git checkout v2.8.0 -b release/2.8.0`
-3. `find . -type f -name '*.js' -o -name '*.jsx' ! -path './node_modules/*' -exec sed -i 's/chrome\./browser./g' {} +`
-4. Apply manual manifest.json Firefox patch (add `browser_specific_settings`, cross-browser background, rename, `version_name`)
-5. Simplify any new callback Promise wrappers
-6. `npm test && npx web-ext lint --source-dir=.`
-7. Merge into `main`, tag `v{version}`
-
-## Session Save
-
-Saying **"save"** in conversation means:
-
-1. Update this `AGENTS.md` with current progress, decisions, and plan
-2. Then run `/compact` to reclaim context
+-   Global Unread pseudo-feed (filters by `hide_globally`)
+-   OA (Original Article) mode: reused named window (`multiflux-oa`) or new
+    tab, from `oaMode` config
+-   Vim-style aliases (q/k prev, e/j next, w open article, ? help)
+-   `t` mark-all-older-as-read + undo toasts for `t`/`A` (30s)
+-   Entry sort direction / category order from server prefs
+-   Auto-read by title keywords
 
 ## Conventions
 
--   Use `browser.*` WebExtensions API (Firefox-preferred, native Promise support)
--   The original `chrome.*` namespace is NOT used — all APIs use `browser.*`
--   `browser.storage.*.get()/.set()/.remove()` return Promises natively — no callback wrappers needed
--   `browser.runtime.lastError` is NOT used — errors are thrown as Promise rejections in Firefox
--   Run `web-ext lint` before every commit — no warnings allowed
+-   React 19 + styled-components + Vite; no router, no state library
+-   All Miniflux access through `apiCall()` in `src/lib/util.jsx`
+-   No `browser.*` / WebExtension APIs anywhere — host-specific behavior goes
+    through `src/lib/host.js`
+-   TDD: node --test first for lib/ logic; E2E via playwright-cli against a
+    local static server + real Miniflux API (temp config.yaml in dist/, never
+    committed)
+-   Run `npm test` and `npm run format:check` before committing
+-   Prettier: tabs, single quotes (see .prettierrc)
 
-## Manifest (cross-browser MV3)
+## Versioning
 
--   Uses both `background.scripts` and `background.service_worker` for cross-browser compatibility:
-    -   Firefox: uses `scripts` (background page)
-    -   Chrome: uses `service_worker` (service worker)
--   `background.type: "module"` enables ES imports in background scripts (Firefox supports this with `scripts`)
--   `browser_specific_settings.gecko.id` is required for Firefox AMO
+Plain semver in `package.json` (manifest.json is gone). Git tags `v{version}`.
+The extension line ended at v1.0.0; the web app restarts at v2.0.0.
 
-## Key Differences from Chrome Extension
+## History / Upstream
 
--   `chrome.action` → `browser.action` (same API shape)
--   `chrome.storage` → `browser.storage` (native Promises, no callback wrappers)
--   `chrome.runtime.*` → `browser.runtime.*` (native Promises)
--   `chrome.permissions.request` → `browser.permissions.request` (same API shape)
--   Content scripts may need `manifest.json` field `browser_style: false` for custom CSS
--   Firefox requires `web_accessible_resources` to use array-of-objects format (MV3 standard)
-
-## Storage
-
--   All extension settings and the API token are stored in `browser.storage.local`
--   Nothing is synchronized through Firefox Sync
--   Legacy Chrome Sync settings are migrated to local storage on first run
--   The API token is sent as `X-Auth-Token` header to the Miniflux server
-
-## Architecture
-
--   **Miniflux API client** (`src/lib/util.jsx`) — wrapped fetch calls to Miniflux server
--   **Background script** (`background.js`) — periodic badge refresh via alarms, toolbar icon click handler
--   **Options page** (`options.html` + `options.js`) — Miniflux server URL and API token configuration
--   **Enhanced reader** (`src/`) — React 19 three-pane RSS reader (categories/feeds, entries, article content)
--   **Badge** — Unread count displayed on toolbar icon, configurable colors and refresh interval
+-   Extension-era docs (AMO/CWS publishing, upstream-upgrade workflow,
+    manifest notes): see `../multiflux-ext/AGENTS.md` and git history ≤ v1.0.0.
+-   ALTERNATIVES.md (repo root) holds the 2026-10 decision analysis that led
+    here (static web app over extension/desktop/fork options).

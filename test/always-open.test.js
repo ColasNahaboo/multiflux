@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import {
 	readAlwaysOpenFeedIds,
 	writeAlwaysOpenFeedIds,
-} from '../src/alwaysOpen.js'
+} from '../src/lib/alwaysOpen.js'
 
 const makeStorage = (initial = {}) => {
 	const values = { ...initial }

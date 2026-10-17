@@ -1,9 +1,9 @@
+import { apiCall, relaTimestamp } from './lib/util'
 import React, { useState, useEffect, useMemo, useRef } from 'react'
-import { apiCall, relaTimestamp, requestBadgeRefresh } from './lib/util'
 import styled from 'styled-components'
 import { useHotkeys } from 'react-hotkeys-hook'
 import Icon from './Icon'
-import { beginAutoRead } from '../settings-utils'
+import { beginAutoRead } from './lib/settings'
 import { bookmarkStateControlStyles } from './readStateStyles'
 import { PRIMARY_HEADER_HEIGHT } from './layout'
 
@@ -752,7 +752,6 @@ function ItemBrowser(props) {
 				if (autoRead.requestedEntries.length) {
 					autoRead.completion
 						.then(() => {
-							requestBadgeRefresh()
 							props.updateUnread([
 								...new Set(
 									autoRead.requestedEntries.map(
@@ -834,7 +833,6 @@ function ItemBrowser(props) {
 				entry_ids: i.map((x) => x.id),
 				status,
 			})
-			requestBadgeRefresh()
 			props.updateUnread(
 				i
 					.map((x) => x.feed.id)
@@ -860,7 +858,6 @@ function ItemBrowser(props) {
 			entry_ids: undo.entryIds,
 			status: 'unread',
 		})
-		requestBadgeRefresh()
 		props.updateUnread(
 			items
 				.filter((x) => undo.entryIds.includes(x.id))

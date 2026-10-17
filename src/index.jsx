@@ -1,48 +1,10 @@
-import browser from 'webextension-polyfill'
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
 import { configureRuntime } from './runtimeConfig'
-import { migrateSyncStorageToLocal } from '../storage-utils.js'
+import { loadConfig } from './lib/config'
 
 const root = createRoot(document.getElementById('root'))
-
-async function loadExtensionSettings() {
-	await migrateSyncStorageToLocal()
-	const localSettings = await browser.storage.local.get([
-		'url',
-		'apiToken',
-		'refresh',
-		'maxItems',
-		'theme',
-		'autoReadTitleKeywords',
-	])
-
-	return {
-		extensionMode: true,
-		server: localSettings.url || '',
-		apiToken: localSettings.apiToken || '',
-		maxItems: Math.min(
-			1000,
-			Math.max(10, Math.round(Number(localSettings.maxItems) || 100))
-		),
-		refreshMinutes: Number(localSettings.refresh) || 0,
-		theme: ['auto', 'light', 'dark'].includes(localSettings.theme)
-			? localSettings.theme
-			: 'auto',
-		autoReadTitleKeywords: Array.isArray(
-			localSettings.autoReadTitleKeywords
-		)
-			? localSettings.autoReadTitleKeywords
-			: String(localSettings.autoReadTitleKeywords || '')
-					.split(',')
-					.map((value) => value.trim())
-					.filter(Boolean),
-		initialSearch: new URLSearchParams(window.location.search)
-			.get('search')
-			?.trim(),
-	}
-}
 
 function Loading() {
 	return (
@@ -50,33 +12,17 @@ function Loading() {
 	)
 }
 
-function MissingSettings() {
+function ConfigError({ message }) {
 	return (
 		<div style={{ fontFamily: 'system-ui', padding: 24 }}>
-			<h2>Miniflux connection settings are missing</h2>
-			<p>
-				Configure the Miniflux URL and API token in extension settings.
+			<h2>Multiflux could not start</h2>
+			<p>{message}</p>
+			<p style={{ color: '#666' }}>
+				Edit <code>config.yaml</code> next to this page (it is served
+				from the app directory) and reload.
 			</p>
-			<button
-				type='button'
-				onClick={() => browser.runtime.openOptionsPage()}
-			>
-				Open extension settings
-			</button>
-		</div>
-	)
-}
-
-function StorageError() {
-	return (
-		<div style={{ fontFamily: 'system-ui', padding: 24 }}>
-			<h2>Extension settings could not be loaded</h2>
-			<p>Reload the extension and try opening the reader again.</p>
-			<button
-				type='button'
-				onClick={() => browser.runtime.openOptionsPage()}
-			>
-				Open extension settings
+			<button type='button' onClick={() => window.location.reload()}>
+				Reload
 			</button>
 		</div>
 	)
@@ -84,23 +30,22 @@ function StorageError() {
 
 async function renderApp() {
 	root.render(<Loading />)
-	let extensionConfig
+	let config
 	try {
-		extensionConfig = await loadExtensionSettings()
+		config = await loadConfig()
 	} catch (error) {
-		console.error('Could not load extension settings:', error)
-		root.render(<StorageError />)
+		console.error('Could not load config.yaml:', error)
+		root.render(<ConfigError message={String(error.message)} />)
 		return
 	}
-	if (!extensionConfig.server || !extensionConfig.apiToken) {
-		root.render(<MissingSettings />)
-		return
-	}
+	config.initialSearch = new URLSearchParams(window.location.search)
+		.get('search')
+		?.trim()
 
-	configureRuntime(extensionConfig)
+	configureRuntime(config)
 	root.render(
 		<React.StrictMode>
-			<App extensionConfig={extensionConfig} />
+			<App config={config} />
 		</React.StrictMode>
 	)
 }

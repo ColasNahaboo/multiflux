@@ -1,0 +1,16 @@
+# Multiflux configuration — copy to config.yaml next to index.html (or in
+# the deployed app directory) and edit. Served as-is by the web server;
+# protect it with Apache Basic auth and/or LAN-only Require rules.
+#
+# Required:
+url: https://rss.nahaboo.org
+apiToken: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+# Optional (defaults shown):
+# theme: auto            # auto | light | dark
+# oaMode: window         # window = reuse a named "multiflux-oa" window,
+#                        # tab    = open original articles in a new tab
+# maxItems: 100          # entries fetched per feed (10..1000)
+# refresh: 60            # auto-refresh interval in minutes (0 = off)
+# autoReadTitleKeywords:
+#   - trump
+#   - elon musk

@@ -2,12 +2,6 @@ import React from 'react'
 import dayjs from 'dayjs'
 import { getRuntimeConfig } from '../runtimeConfig'
 
-export function requestBadgeRefresh() {
-	browser.runtime.sendMessage({ type: 'refreshBadge' }).catch((error) => {
-		console.error('Could not request unread badge refresh:', error)
-	})
-}
-
 export function apiCall(
 	s,
 	errorHandler,

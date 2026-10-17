@@ -1,177 +1,48 @@
 # Multiflux
 
-Multiflux is a **Firefox and Chrome/Chromium Manifest V3 extension** for Miniflux. It provides a modern three-pane enhanced interface similar to [Fluent Reader](https://hyliu.me/fluent-reader/), and shows the unread count in the browser toolbar.
+Keyboard-first three-pane web reader for your self-hosted
+[Miniflux](https://miniflux.app/) server.
 
-The extension communicates directly with the Miniflux server configured by the user and does not require an intermediary service or external application backend.
+## What it is
 
-![Co-Designed with AI](icons/AI-badge.png) This repository is designed, tested and used by me, Colas Nahaboo, a human hobbyist in my personal time with implementation mostly by AI (Opencode and DeepSeek V4 pro) forked from the nice [Miniflux Companion](https://codeberg.org/gbcox/miniflux-companion).
+A static web app you deploy next to your Miniflux instance (e.g. at
+`https://rss.example.org/mf/`). It talks to the Miniflux REST API directly from
+the browser using an API token kept in a hand-edited `config.yaml` on your
+server — no backend, no accounts, no store, no build services.
 
-## Screenshots
+-   Three panes: categories/feeds → entry list → article content
+-   Global Unread pseudo-feed honoring Miniflux's "hide globally" flag
+-   Vim-style keyboard navigation (`q/e/w/?` aliases on top of `hjkl`)
+-   Original-Article mode: articles open in a reusable side window (or tab)
+-   Batch mark-read with 30s undo toasts, auto-read by title keywords
+-   Light/dark/auto themes; sort and category order from server preferences
 
-TODO: provide screenshots (1280x800 PNG, min 640x400 recommended by AMO)
+## Quick start
 
-| Three-pane reader (light) | Original article window   |
-| ------------------------- | ------------------------- |
-| TODO: screenshot 1024x800 | TODO: screenshot 1024x800 |
+1.  `npm install && npm run build`
+2.  Copy `dist/*` to a directory served by the web server in front of your
+    Miniflux (same host or any origin — the API is CORS-enabled).
+3.  Copy `config.example.yaml` to `config.yaml` next to `index.html`, fill in
+    `url` and `apiToken` (Miniflux → Settings → API).
+4.  **Protect `config.yaml`** (Basic auth and/or LAN-only) — it contains the
+    token. See `AGENTS.md` for an Apache example.
+5.  Open the page.
 
-| Options page              | Dark theme                |
-| ------------------------- | ------------------------- |
-| TODO: screenshot 1024x800 | TODO: screenshot 1024x800 |
-
-## Features
-
--   Unread toolbar badge with configurable polling interval and colors
--   Enhanced three-pane reader
--   Collapsible and resizable navigation, entry, and article panes
--   Persistent pane widths and layout preferences
--   Category and feed navigation
--   Feed and category maintenance
--   Contextual search
--   Read and unread controls
--   Mark all visible entries as read
--   Mark all entries in feed older than the current item as read
--   Undo of the "Mark all" operations
--   Original article: open in a new window to the right or in a new tab
--   Automatic read filters using case-insensitive title keywords
--   Bookmark support
--   Keyboard navigation
--   Light, dark, and system themes
--   Configurable item limit
--   Immediate badge updates after supported reader actions
--   Direct communication with the user-configured Miniflux server
--   No analytics, advertising, tracking, or remote executable code
-
-### Keyboard Shortcuts
-
-| Key                         | Action                                     |
-| --------------------------- | ------------------------------------------ |
-| `Left / p / k / q`          | Previous item                              |
-| `Right / n / j / e / Space` | Next item                                  |
-| `m`                         | Mark item read/unread                      |
-| `t`                         | Mark all items older than current as read  |
-| `A`                         | Mark all visible items as read             |
-| `u`                         | Toggle unread/all items                    |
-| `s`                         | Toggle item sort order (newest/oldest)     |
-| `f`                         | Star/unstar item                           |
-| `v / w`                     | Open original article (OA window or tab)   |
-| `V`                         | Always open original article for this feed |
-| `c`                         | Open comments in new tab                   |
-| `r`                         | Refresh unread counts                      |
-| `R`                         | Fetch feeds and refresh feed list          |
-| `D`                         | Toggle light/dark theme                    |
-| `h / ?`                     | Show keyboard shortcuts                    |
-| `Up / Down`                 | Navigate feeds                             |
-| `x`                         | Collapse/uncollapse category               |
-| `U`                         | Toggle unread/all feeds                    |
-
-### Motivations
-
-I wanted a RSS reader that:
-
--   was using Miniflux as its backend, as I love its architecture, especially the Go single binary.
--   was simple to host and maintain (no docker, database, exotic frameworks, many dependencies,...)
--   has a modern UI (unlike Miniflux), but also efficient use of the keyboard (like Miniflux)
--   uses the left hand to navigate, freeing the right hand for the mouse, and natural for PC videogames players (close to the [WASD standard](https://www.pcgamer.com/how-wasd-became-the-standard-pc-control-scheme/))
--   takes advantage of modern ultra-wide screen, by adding the original article view as a browser window in full view on the right, instead of hidden in another tab. The fact that this window is a real first class window is important, to be able to use the full power of your actual browser.
--   allow me to implement usability enhancements each time I wanted to [scratch an itch](https://opensource.com/article/17/4/itch-to-scratch-model-user-problems) (hence my use of AI).
-
-### Differences with Miniflux Companion
-
--   Available as a Firefox extension in addition to Chrome/Chromium.
--   Left-hand keyboard navigation (WASD-inspired `q`/`w`/`e` for prev/view/next, see table above).
--   `t` key: mark older items as read, `?` for help (in addition to `h`).
--   Undo toast for batch mark-read operations.
--   "3+1" view: three-pane layout plus optionally a full browser window to the right for the original article, or a new tab on narrower screens.
--   Respects Miniflux server entry sort direction and category ordering.
-
-## Installation
-
-**Prerequisites:** a [Miniflux](https://miniflux.app/) instance with an API token (Miniflux → Settings → API Keys → Create).
-
-### Firefox
-
-TODO: Install from the Firefox Add-ons (AMO) store listing.
-
-Or load temporarily for development: `about:debugging` → This Firefox → Load Temporary Add-on → select `dist-firefox/manifest.json`.
-
-### Chrome / Chromium
-
-TODO: Install from the Chrome Web Store.
-
-Or load unpacked for development: `chrome://extensions` → enable **Developer mode** → **Load unpacked** → select the `dist-chrome/` directory.
-
-### Initial setup
-
-1. Click the Multiflux toolbar icon, then the gear icon (or right-click → Options)
-2. Enter your Miniflux server URL and API token, click **Test connection**
-3. Click **Save changes**
-
-The URL can be the server root (for example, `https://example.com`) or the Miniflux API endpoint ending in `/v1`; Multiflux normalizes either form.
-
-The toolbar badge shows the unread count (refreshes every 60 minutes by default). With the **Global Unread count** option enabled, it counts only feeds not hidden from the global unread list.
-
-## Configuration
-
-The Options page provides settings for:
-
--   Miniflux server URL and API token
--   Connection testing and connected account details
--   Item limit and theme
--   Automatic read title keywords
--   Polling interval and "open original article" tab or window behavior
--   Badge colors, live preview, and global-unread badge count
-
-## Reader
-
-The enhanced reader provides a three-pane layout for categories and feeds, the entry list, and article content.
-
-Reader actions such as read-state changes, bookmarks, and supported feed or category changes are written back to Miniflux and remain visible in the standard Miniflux interface and other Miniflux clients.
-
-Automatic read filters match user-defined words or phrases against entry titles. Matching is case-insensitive, and matching entries remain stored in Miniflux while being marked read.
-
-## Permissions
-
--   `storage`: Stores all extension settings, the API token, and connected-account details locally in the browser. It also performs a one-time migration of settings saved by older versions from Chrome Sync to local extension storage; nothing remains synchronized after migration.
--   `alarms`: Schedules periodic refreshes of the unread-entry count so the toolbar badge stays current at the polling interval selected by the user.
--   `tabs`: Opens or focuses the Multiflux reader tab when the toolbar icon is clicked.
--   Optional host access: Connects directly to the user-configured Miniflux server after the user grants access to that origin.
-
-## Privacy
-
-Multiflux does **not** collect any personal data. There is no analytics, advertising, tracking, remote executable code, or developer-operated intermediary server.
-
-All extension settings and connected-account details, including the server URL and API token, are stored in `browser.storage.local`. Nothing is synchronized through browser sync. Existing synchronized settings from older versions are migrated to local extension storage and removed from synchronized storage only after the local write succeeds. The API token is sent directly to the configured Miniflux server as an `X-Auth-Token` header.
-
-Reader layout preferences and favicon data may be stored locally in the browser. The API token is never stored in page local storage.
-
-See [privacy-policy.md](privacy-policy.md) for the complete privacy policy.
-
-## Building from Source
+## Development
 
 ```bash
-npm install
-npm run build          # both browsers (dist-firefox/ and dist-chrome/)
-npm run build:firefox  # Firefox only
-npm run build:chrome   # Chrome / Chromium only
-npm test               # run tests
+npm test              # node --test
+npm run dev           # vite dev server
+npm run format:check  # prettier
 ```
 
-The same codebase produces both Firefox and Chrome extensions via [webextension-polyfill](https://github.com/mozilla/webextension-polyfill). The build script (`build-extension.mjs`) generates browser-specific manifests and packages signed `.zip` files in `web-ext-artifacts/`.
+## History
 
-## Getting Help
-
--   **Issues**: Report bugs or request features on the [GitHub issues page](https://github.com/ColasNahaboo/multiflux/issues)
--   **Keyboard shortcuts**: Press `?` or `h` in the reader to see all shortcuts
--   **Configuration**: Right-click the extension icon → Options, or click the gear icon in the reader
-
-## Acknowledgments
-
--   The enhanced reader incorporates and significantly modifies code from the
-    original [Reminiflux](https://github.com/reminiflux/reminiflux) project,
-    created by Andras Bali.
--   The Multiflux code is a fork of [Miniflux Companion](https://codeberg.org/gbcox/miniflux-companion) by Gerald Cox, without which this project could not have started.
+v1.x was a Firefox/Chrome extension (a fork of
+[miniflux-companion](https://codeberg.org/gbcox/miniflux-companion), GPL v3).
+The extension was retired in favor of this web app; its code lives on in the
+`multiflux-ext` archive and in git history up to `v1.0.0`.
 
 ## License
 
-© Colas Nahaboo, 2026.
-Multiflux is licensed under the GNU General Public License v3.0 or, at your option, any later version. See [LICENSE.md](LICENSE.md).
+GPL-3.0-or-later © Colas Nahaboo (upstream: Gerald Cox)

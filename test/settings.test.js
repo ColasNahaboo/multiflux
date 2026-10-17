@@ -7,7 +7,7 @@ import {
 	parseKeywords,
 	titleMatchesKeywords,
 	testMinifluxConnection,
-} from '../settings-utils.js'
+} from '../src/lib/settings.js'
 
 test('auto-read entries are excluded before their IDs are batch marked', async () => {
 	const entries = [

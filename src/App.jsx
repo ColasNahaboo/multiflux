@@ -5,14 +5,15 @@ import ItemViewer from './ItemViewer'
 import KeyHelpModal from './KeyHelpModal'
 import styled from 'styled-components'
 import { useHotkeys } from 'react-hotkeys-hook'
-import { apiCall, createFeedIcon, requestBadgeRefresh } from './lib/util'
+import { apiCall, createFeedIcon } from './lib/util'
 import { GlobalStyles } from './globalStyles'
 import { ThemeProvider } from 'styled-components'
 import { lightTheme, darkTheme } from './themes'
 import ClickNHold from './ClickNHold'
 import Icon from './Icon'
 import { PRIMARY_HEADER_HEIGHT } from './layout'
-import { readAlwaysOpenFeedIds, writeAlwaysOpenFeedIds } from './alwaysOpen'
+import { readAlwaysOpenFeedIds, writeAlwaysOpenFeedIds } from './lib/alwaysOpen'
+import { readStoredTheme, writeStoredTheme } from './lib/host'
 
 const ErrorDiv = styled.div`
 	padding: 10px;
@@ -212,14 +213,14 @@ const darkModeMediaQuery = window.matchMedia
 		: lightTheme
 	: lightTheme
 
-function App({ extensionConfig }) {
-	const [theme, setThemeState] = useState(extensionConfig.theme)
-	const maxItems = extensionConfig.maxItems
-	const autoReadTitleKeywords = extensionConfig.autoReadTitleKeywords
-	const refreshInterval = extensionConfig.refreshMinutes * 60 * 1000
+function App({ config }) {
+	const [theme, setThemeState] = useState(readStoredTheme() || config.theme)
+	const maxItems = config.maxItems
+	const autoReadTitleKeywords = config.autoReadTitleKeywords
+	const refreshInterval = config.refreshMinutes * 60 * 1000
 	const setTheme = (value) => {
 		setThemeState(value)
-		browser.storage.local.set({ theme: value })
+		writeStoredTheme(value)
 	}
 
 	const [error, setError] = useState()
@@ -227,15 +228,9 @@ function App({ extensionConfig }) {
 	const [currentItem, setCurrentItem] = useState()
 	const [feeds, setFeeds] = useState([])
 	const [sourcesLoading, setSourcesLoading] = useState(true)
-	const [searchQuery, setSearchQuery] = useState(
-		extensionConfig?.initialSearch || ''
-	)
-	const [searchInput, setSearchInput] = useState(
-		extensionConfig?.initialSearch || ''
-	)
-	const [searchOpen, setSearchOpen] = useState(
-		!!extensionConfig?.initialSearch
-	)
+	const [searchQuery, setSearchQuery] = useState(config?.initialSearch || '')
+	const [searchInput, setSearchInput] = useState(config?.initialSearch || '')
+	const [searchOpen, setSearchOpen] = useState(!!config?.initialSearch)
 	const searchInputRef = useRef()
 	const previousItemRef = useRef()
 
@@ -501,7 +496,6 @@ function App({ extensionConfig }) {
 			setError,
 			{}
 		)
-		requestBadgeRefresh()
 		setReadReconciliation({ feedIds, status: 'read' })
 		setCurrentItem((item) =>
 			item && feedIds.includes(item.feed.id)
@@ -587,7 +581,7 @@ function App({ extensionConfig }) {
 	}
 	const deleteFeed = async (feed) => {
 		await apiCall(`feeds/${feed.id}`, setError, null, 'DELETE')
-		requestBadgeRefresh()
+
 		setFeeds((current) => current.filter((item) => item.id !== feed.id))
 		if (currentFeed?.id === feed.id) {
 			setCurrentFeed(undefined)
@@ -686,7 +680,7 @@ function App({ extensionConfig }) {
 			entry_ids: [item.id],
 			status,
 		})
-		requestBadgeRefresh()
+
 		setUpdateUnreadTrigger([item.feed.id])
 		setReadReconciliation({ entryIds: [item.id], status })
 		setCurrentItem((current) =>
@@ -1030,11 +1024,9 @@ function App({ extensionConfig }) {
 										</FloatingButton>
 									</ClickNHold>
 									<FloatingButton
-										onClick={() =>
-											browser.runtime.openOptionsPage()
-										}
-										title='Settings'
-										aria-label='Settings'
+										onClick={() => window.location.reload()}
+										title='Settings live in config.yaml — reload to apply changes'
+										aria-label='Reload to apply config.yaml settings'
 									>
 										<Icon name='settings' />
 									</FloatingButton>

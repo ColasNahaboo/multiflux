@@ -1,7 +1,7 @@
 const runtimeConfig = {
-	extensionMode: true,
 	server: null,
 	apiToken: null,
+	oaMode: 'window',
 	maxItems: 100,
 	refreshMinutes: 0,
 	theme: 'auto',
