@@ -77,9 +77,11 @@ npm run dev           # vite dev server (needs a config.yaml in dist/ or public/
 On `m`: `/etc/multiflux/config.yaml` (edit by hand, reload page to apply;
 gitignored; see `config.example.yaml` for a documented sample). Keys: `url`,
 `apiToken` (required); `theme`
-(auto|light|dark), `oaMode` (window|tab), `maxItems` (10..1000), `refresh`
-(minutes, 0=off), `autoReadTitleKeywords` (block list). Reload the page to
-apply edits. The settings gear button just reloads.
+(auto|light|dark), `oaMode` (window|tab), `oaGeometry` (`right` = right of
+reader same size [default], `half` = right screen half, or explicit
+`x,y,w,h` pixels — negative x for a left monitor), `maxItems` (10..1000),
+`refresh` (minutes, 0=off), `autoReadTitleKeywords` (block list). Reload the
+page to apply edits. The settings gear button just reloads.
 
 ## Deploy (host `m`)
 
@@ -157,7 +159,9 @@ apply edits. The settings gear button just reloads.
 
 -   Global Unread pseudo-feed (filters by `hide_globally`)
 -   OA (Original Article) mode: reused named window (`multiflux-oa`) or new
-    tab, from `oaMode` config
+    tab, geometry via `oaGeometry` (see `oaFeatures()` in `src/lib/host.js`,
+    unit-tested; headless Chromium ignores features — verify placement in a
+    real browser only)
 -   Vim-style aliases (q/k prev, e/j next, w open article, ? help)
 -   `t` mark-all-older-as-read + undo toasts for `t`/`A` (30s)
 -   Entry sort direction / category order from server prefs

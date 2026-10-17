@@ -53,6 +53,7 @@ export function applyDefaults(raw) {
 	const oaMode = raw.oaMode ?? 'window'
 	if (!['window', 'tab'].includes(oaMode))
 		throw new Error(`config: invalid oaMode "${oaMode}"`)
+	const oaGeometry = parseOaGeometry(raw.oaGeometry)
 	return {
 		server: normalizeServerUrl(raw.url),
 		apiToken: String(raw.apiToken).trim(),
@@ -63,6 +64,7 @@ export function applyDefaults(raw) {
 		refreshMinutes: Number(raw.refresh) || 0,
 		theme,
 		oaMode,
+		oaGeometry,
 		autoReadTitleKeywords: Array.isArray(raw.autoReadTitleKeywords)
 			? raw.autoReadTitleKeywords.map(String)
 			: String(raw.autoReadTitleKeywords || '')
@@ -70,6 +72,21 @@ export function applyDefaults(raw) {
 					.map((value) => value.trim())
 					.filter(Boolean),
 	}
+}
+
+export function parseOaGeometry(value) {
+	if (value === undefined || value === null || value === '')
+		return { preset: 'right' }
+	const text = String(value).trim()
+	if (['right', 'half'].includes(text)) return { preset: text }
+	const parts = text.split(',')
+	if (parts.length === 4 && parts.every((p) => /^-?\d+$/.test(p.trim()))) {
+		const [x, y, w, h] = parts.map((p) => Number(p.trim()))
+		if (w > 0 && h > 0) return { x, y, w, h }
+	}
+	throw new Error(
+		`config: invalid oaGeometry "${text}" (use right|same|half or x,y,w,h)`
+	)
 }
 
 export async function loadConfig(fetcher = fetch) {

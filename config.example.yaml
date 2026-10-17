@@ -1,6 +1,5 @@
-# Multiflux configuration — copy to config.yaml next to index.html (or in
-# the deployed app directory) and edit. Served as-is by the web server;
-# protect it with Apache Basic auth and/or LAN-only Require rules.
+# Multiflux configuration — on m: /etc/multiflux/config.yaml (served at
+# /mf/config.yaml, protected by LAN-or-Basic-auth). Edit and reload the page.
 #
 # Required:
 url: https://rss.nahaboo.org
@@ -9,6 +8,13 @@ apiToken: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
 # theme: auto            # auto | light | dark
 # oaMode: window         # window = reuse a named "multiflux-oa" window,
 #                        # tab    = open original articles in a new tab
+# oaGeometry: right      # OA window placement (oaMode: window):
+#                        #   right        just right of the reader, same size
+#                        #                (default)
+#                        #   half         right half of the screen
+#                        #   x,y,w,h      explicit pixels; x may be negative
+#                        #                for a monitor left of the main one,
+#                        #                e.g. 1920,0,1280,1024
 # maxItems: 100          # entries fetched per feed (10..1000)
 # refresh: 60            # auto-refresh interval in minutes (0 = off)
 # autoReadTitleKeywords:
