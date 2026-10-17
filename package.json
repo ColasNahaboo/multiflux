@@ -10,7 +10,7 @@
 		"format": "prettier --write . --ignore-unknown",
 		"format:check": "prettier --check . --ignore-unknown",
 		"test": "node --test",
-		"deploy": "npm run build && rsync -a --delete --exclude config.yaml dist/ m:/www/multiflux/"
+		"deploy": "npm run build && rsync -a --delete dist/ m:/www/multiflux/"
 	},
 	"dependencies": {
 		"@fluentui/react-icons": "^2.0.332",

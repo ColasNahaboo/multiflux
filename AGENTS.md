@@ -29,9 +29,10 @@ Key facts (verified against Miniflux source + live server, 2026-10):
     UI only).
 -   `/v1` sends `Access-Control-Allow-Origin: *` allowing `X-Auth-Token`, so
     any origin can call the API with a token. This is why no Go backend exists.
--   The token lives in `config.yaml` next to `index.html`, fetched at startup
-    (`src/lib/config.js` parses a minimal YAML subset — flat keys, block
-    lists, comments). Settings are edited by hand; there is NO settings page.
+-   The token lives in `/etc/multiflux/config.yaml` (served at
+    `/mf/config.yaml`), fetched at startup (`src/lib/config.js` parses a
+    minimal YAML subset — flat keys, block lists, comments). Settings are
+    edited by hand; there is NO settings page.
 -   `config.yaml` is protected by Apache: `<RequireAny>` LAN IP OR Basic auth
     (see DEPLOY below). Theme override persists in `localStorage`
     (`multiflux_theme`); always-open-original feed IDs too (`always_open_original_feeds`).
@@ -73,32 +74,46 @@ npm run dev           # vite dev server (needs a config.yaml in dist/ or public/
 
 ## Configuration (`config.yaml`)
 
-Placed next to `index.html` in the deploy dir (gitignored; see
-`config.example.yaml`). Keys: `url`, `apiToken` (required); `theme`
+On `m`: `/etc/multiflux/config.yaml` (edit by hand, reload page to apply;
+gitignored; see `config.example.yaml` for a documented sample). Keys: `url`,
+`apiToken` (required); `theme`
 (auto|light|dark), `oaMode` (window|tab), `maxItems` (10..1000), `refresh`
 (minutes, 0=off), `autoReadTitleKeywords` (block list). Reload the page to
 apply edits. The settings gear button just reloads.
 
 ## Deploy (host `m`)
 
--   App dir: `/www/multiflux` (rsync of `dist/`, config.yaml excluded)
+-   App dir: `/www/multiflux` — pure rsync target of `dist/` (`--delete` safe)
+-   Config: `/etc/multiflux/config.yaml` (root:www-data 640), **outside** the
+    rsync target so deploys can never delete it; edit with emacs, then reload
+    the browser page.
 -   Apache `rss.conf` additions inside the 443 vhost, BEFORE the catch-all
-    `ProxyPass /`:
+    `ProxyPass /`. The `/mf/config.yaml` Alias must come **before** `Alias
+/mf` (first-match wins) and needs its own `<Directory>` grant:
 
 ```apache
+    # Multiflux web app (static files; browser calls /v1 cross-origin directly)
+    # config.yaml holds the API token — kept outside the rsync target,
+    # LAN or Basic auth required
+    Alias /mf/config.yaml /etc/multiflux/config.yaml
+    <Directory /etc/multiflux>
+        Options None
+        AllowOverride None
+        Require all granted
+    </Directory>
+    <Location /mf/config.yaml>
+        AuthType Basic
+        AuthName "Multiflux"
+        AuthUserFile /etc/apache2/.multiflux.htpasswd
+        <RequireAny>
+            Require ip 10.0.0.0/8
+            Require valid-user
+        </RequireAny>
+    </Location>
+
     Alias /mf /www/multiflux
     <Directory /www/multiflux>
         Require all granted
-        # config.yaml holds the API token — LAN or Basic auth required
-        <Files "config.yaml">
-            AuthType Basic
-            AuthName "Multiflux"
-            AuthUserFile /etc/apache2/.multiflux.htpasswd
-            <RequireAny>
-                Require ip 10.0.0.0/8
-                Require valid-user
-            </RequireAny>
-        </Files>
     </Directory>
 
     # BEFORE the catch-all ProxyPass, exempt /mf from proxying to Miniflux:
@@ -109,13 +124,11 @@ apply edits. The settings gear button just reloads.
 -   URL: https://rss.nahaboo.org/mf/ (deployed 2026-10-17, verified E2E)
 -   **`ProxyPass /mf !` is mandatory** — without it the catch-all proxies
     `/mf` to Miniflux, which 302s to its login page.
--   `config.yaml` must be group-readable by Apache: `chgrp www-data
-config.yaml; chmod 640` (rsync runs as colas; 640 root-only → 403).
 -   Basic-auth user `colas` in `/etc/apache2/.multiflux.htpasswd` (password =
     Colas's personal one, same as `.colas.pass`). Verified: 401 without auth
     off-LAN, 200 with; 200 from LAN without prompt.
--   `config.yaml` must be served as text (Apache default text/plain is fine;
-    the loader rejects HTML bodies).
+-   `config.yaml` is served as `application/yaml`; the loader rejects HTML
+    bodies (defensive against misroutes).
 
 ## Keyboard Shortcuts
 
