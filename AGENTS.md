@@ -95,14 +95,25 @@ apply edits. The settings gear button just reloads.
             AuthName "Multiflux"
             AuthUserFile /etc/apache2/.multiflux.htpasswd
             <RequireAny>
-                Require ip 192.168.1.0/24
+                Require ip 10.0.0.0/8
                 Require valid-user
             </RequireAny>
         </Files>
     </Directory>
+
+    # BEFORE the catch-all ProxyPass, exempt /mf from proxying to Miniflux:
+    ProxyPass /mf !
+    ProxyPass / http://127.0.0.1:8080/
 ```
 
--   URL: https://rss.nahaboo.org/mf/
+-   URL: https://rss.nahaboo.org/mf/ (deployed 2026-10-17, verified E2E)
+-   **`ProxyPass /mf !` is mandatory** — without it the catch-all proxies
+    `/mf` to Miniflux, which 302s to its login page.
+-   `config.yaml` must be group-readable by Apache: `chgrp www-data
+config.yaml; chmod 640` (rsync runs as colas; 640 root-only → 403).
+-   Basic-auth user `colas` in `/etc/apache2/.multiflux.htpasswd` (password =
+    Colas's personal one, same as `.colas.pass`). Verified: 401 without auth
+    off-LAN, 200 with; 200 from LAN without prompt.
 -   `config.yaml` must be served as text (Apache default text/plain is fine;
     the loader rejects HTML bodies).
 
