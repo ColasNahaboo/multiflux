@@ -359,9 +359,9 @@ function ItemViewer(props) {
 	)
 
 	useHotkeys('f', () => toggleStar(), [item])
-	useHotkeys('v', () => item && openOrReuseOA(item.url), [item])
+	useHotkeys('v,d', () => item && openOrReuseOA(item.url), [item])
 	useHotkeys(
-		'd',
+		'a',
 		() => {
 			if (originalUrl) window.open(originalUrl, '_blank', 'noopener')
 		},

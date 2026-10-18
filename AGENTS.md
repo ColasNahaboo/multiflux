@@ -150,8 +150,8 @@ page to apply edits. The settings gear button just reloads.
 | `u`                         | Toggle unread/all items                       |
 | `s`                         | Toggle item sort order                        |
 | `f`                         | Star/unstar item                              |
-| `v`                         | Open original article in OA window            |
-| `d`                         | Open original article in a new tab            |
+| `v / d`                     | Open original article in OA window            |
+| `a`                         | Open original article in a new tab            |
 | `w`                         | Fetch and save full article content           |
 | `V`                         | Always open original article for this feed    |
 | `W`                         | Toggle auto-fetch on first view for this feed |
