@@ -3,8 +3,9 @@
 <img src="public/icons/multiflux.svg" align="right" width="200" height="200">Keyboard-first three--plus-one pane web reader for your self-hosted
 [Miniflux](https://miniflux.app/) server, with:
 
--   "gaming" keyboard navigation (aka WASD) on the left hand to leave the right hand free to use the mouse instead of the VI keys (HJKL)
--   "3+1" panes: the 3 traditional panes (feeds, articles, article) plus an optional standalone full browser view of the original article, to make use of modern big wide screens.
+- "gaming" default keyboard navigation (aka WASD) on the left hand to leave the right hand free to use the mouse instead of the VI keys (HJKL)
+- all keys are **fully remappable**
+- "3+1" panes: the 3 traditional panes (feeds, articles, article) plus an optional standalone full browser view of the original article, to make use of modern big wide screens.
 
 ## What it is
 
