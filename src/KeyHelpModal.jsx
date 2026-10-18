@@ -20,6 +20,7 @@ const keyMap = [
 	['s', 'Toggle item sort order'],
 	['f', 'Star/unstar item'],
 	['v', 'Open original article in the OA window'],
+	['d', 'Open original article in a new tab'],
 	['w', 'Fetch and save full article content'],
 	['V', 'Always open original link for this feed'],
 	['W', 'Toggle auto-fetch on first view for this feed'],

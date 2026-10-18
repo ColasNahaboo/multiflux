@@ -360,6 +360,13 @@ function ItemViewer(props) {
 
 	useHotkeys('f', () => toggleStar(), [item])
 	useHotkeys('v', () => item && openOrReuseOA(item.url), [item])
+	useHotkeys(
+		'd',
+		() => {
+			if (originalUrl) window.open(originalUrl, '_blank', 'noopener')
+		},
+		[originalUrl]
+	)
 	useHotkeys('w', () => fetchFullText(), [fetchFullText])
 	useHotkeys('c', () => commentsUrl && window.open(commentsUrl, '_blank'), [
 		commentsUrl,
