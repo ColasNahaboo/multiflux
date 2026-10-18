@@ -9,6 +9,18 @@ export function globalUnreadTotal(unreads, feeds) {
 	)
 }
 
+export function resolveCurrentFeed(current, feedTree) {
+	if (!current) return current
+	return (
+		feedTree.find(
+			(item) =>
+				item.id === current.id &&
+				Boolean(item.is_feed) === Boolean(current.is_feed) &&
+				Boolean(item.fetch_url) === Boolean(current.fetch_url)
+		) || undefined
+	)
+}
+
 export function normalizeServerUrl(value) {
 	const url = new URL(String(value).trim())
 	if (!['http:', 'https:'].includes(url.protocol))

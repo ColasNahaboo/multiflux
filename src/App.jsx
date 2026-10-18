@@ -6,6 +6,8 @@ import KeyHelpModal from './KeyHelpModal'
 import styled from 'styled-components'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { apiCall, createFeedIcon } from './lib/util'
+import { mergeFetchedContent } from './lib/entryContent'
+import { resolveCurrentFeed } from './lib/settings'
 import { GlobalStyles } from './globalStyles'
 import { ThemeProvider } from 'styled-components'
 import { lightTheme, darkTheme } from './themes'
@@ -13,6 +15,10 @@ import ClickNHold from './ClickNHold'
 import Icon from './Icon'
 import { PRIMARY_HEADER_HEIGHT } from './layout'
 import { readAlwaysOpenFeedIds, writeAlwaysOpenFeedIds } from './lib/alwaysOpen'
+import {
+	readAlwaysFullTextFeedIds,
+	writeAlwaysFullTextFeedIds,
+} from './lib/alwaysFullText'
 import { readStoredTheme, writeStoredTheme } from './lib/host'
 
 const ErrorDiv = styled.div`
@@ -242,9 +248,13 @@ function App({ config }) {
 	const [entrySortDirection, setEntrySortDirection] = useState('desc')
 	const [readReconciliation, setReadReconciliation] = useState()
 	const [bookmarkReconciliation, setBookmarkReconciliation] = useState()
+	const [contentReconciliation, setContentReconciliation] = useState()
 	const [viewRevision, setViewRevision] = useState(0)
 	const [alwaysOpenFeedIds, setAlwaysOpenFeedIdsState] = useState(() =>
 		readAlwaysOpenFeedIds(localStorage)
+	)
+	const [alwaysFullTextFeedIds, setAlwaysFullTextFeedIdsState] = useState(
+		() => readAlwaysFullTextFeedIds(localStorage)
 	)
 	const [feedPaneWidth, setFeedPaneWidth] = useState(getInitialFeedWidth)
 	const [itemPaneWidth, setItemPaneWidth] = useState(getInitialItemWidth)
@@ -317,6 +327,9 @@ function App({ config }) {
 	const alwaysOpenActive = alwaysOpenFeed
 		? alwaysOpenFeedIds.includes(alwaysOpenFeed.id)
 		: false
+	const alwaysFullTextActive = alwaysOpenFeed
+		? alwaysFullTextFeedIds.includes(alwaysOpenFeed.id)
+		: false
 	const toggleAlwaysOpen = () => {
 		if (!alwaysOpenFeed) return
 		const id = alwaysOpenFeed.id
@@ -325,6 +338,15 @@ function App({ config }) {
 			: [...alwaysOpenFeedIds, id]
 		setAlwaysOpenFeedIdsState(next)
 		writeAlwaysOpenFeedIds(localStorage, next)
+	}
+	const toggleAlwaysFullText = () => {
+		if (!alwaysOpenFeed) return
+		const id = alwaysOpenFeed.id
+		const next = alwaysFullTextActive
+			? alwaysFullTextFeedIds.filter((x) => x !== id)
+			: [...alwaysFullTextFeedIds, id]
+		setAlwaysFullTextFeedIdsState(next)
+		writeAlwaysFullTextFeedIds(localStorage, next)
 	}
 
 	useEffect(() => {
@@ -404,19 +426,9 @@ function App({ config }) {
 					}
 				})
 				setFeeds(feedTree)
-				setCurrentFeed((current) => {
-					if (!current) return current
-					return (
-						feedTree.find(
-							(item) =>
-								item.id === current.id &&
-								Boolean(item.is_feed) ===
-									Boolean(current.is_feed) &&
-								Boolean(item.fetch_url) ===
-									Boolean(current.fetch_url)
-						) || current
-					)
-				})
+				setCurrentFeed((current) =>
+					resolveCurrentFeed(current, feedTree)
+				)
 				setUpdateUnreadTrigger(feedTree)
 			} finally {
 				setSourcesLoading(false)
@@ -697,6 +709,14 @@ function App({ config }) {
 			current?.id === updatedItem.id ? updatedItem : current
 		)
 	}
+	const updateFetchedContent = (updatedItem) => {
+		setContentReconciliation(updatedItem)
+		setCurrentItem((current) =>
+			current?.id === updatedItem.id
+				? mergeFetchedContent(current, updatedItem)
+				: current
+		)
+	}
 
 	const getMaxFeedWidth = (containerWidth, itemWidth) => {
 		return Math.max(
@@ -959,6 +979,13 @@ function App({ config }) {
 		},
 		[alwaysOpenFeed, alwaysOpenActive, alwaysOpenFeedIds]
 	)
+	useHotkeys(
+		'shift+w',
+		() => {
+			toggleAlwaysFullText()
+		},
+		[alwaysOpenFeed, alwaysFullTextActive, alwaysFullTextFeedIds]
+	)
 
 	return (
 		<ThemeProvider
@@ -1146,11 +1173,14 @@ function App({ config }) {
 							viewRevision={viewRevision}
 							onSetReadState={setReadState}
 							bookmarkReconciliation={bookmarkReconciliation}
+							contentReconciliation={contentReconciliation}
 							onToggleBookmark={toggleBookmark}
 							entrySortDirection={entrySortDirection}
 							alwaysOpenActive={alwaysOpenActive}
 							alwaysOpenFeed={alwaysOpenFeed}
 							onToggleAlwaysOpen={toggleAlwaysOpen}
+							alwaysFullTextActive={alwaysFullTextActive}
+							onToggleAlwaysFullText={toggleAlwaysFullText}
 						/>
 					</ItemPane>
 					<ColumnResizeHandle
@@ -1190,7 +1220,9 @@ function App({ config }) {
 							errorHandler={setError}
 							onSetReadState={setReadState}
 							onToggleBookmark={toggleBookmark}
+							onContentFetched={updateFetchedContent}
 							alwaysOpenActive={alwaysOpenActive}
+							alwaysFullTextActive={alwaysFullTextActive}
 						/>
 					</ReaderPane>
 				</AppLayout>
