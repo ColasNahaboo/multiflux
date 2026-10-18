@@ -72,5 +72,5 @@ test('keys.example.yaml documents exactly the defaults', () => {
 		new URL('../keys.example.yaml', import.meta.url),
 		'utf8'
 	)
-	assert.deepEqual(parseSimpleYaml(text), DEFAULT_KEYMAP)
+	assert.deepEqual(parseSimpleYaml(text).keys, DEFAULT_KEYMAP)
 })

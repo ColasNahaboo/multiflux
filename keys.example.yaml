@@ -16,34 +16,36 @@
 # Browser-reserved chords (ctrl+t/w/n, ctrl+tab, alt+left, ...) are rejected.
 # Invalid or unknown actions in config.yaml abort startup with an error.
 
-prevFeed: up # previous feed in the navigation pane
-nextFeed: down # next feed in the navigation pane
-toggleHideReadFeeds: shift+u # show only unread feeds / all feeds
-toggleCategoryCollapse: x # collapse/uncollapse current category
+keys:
 
-prevItem: left,p,k,q # previous entry
-nextItem: right,n,j,e,space # next entry
-firstItem: home # first entry of the list
-lastItem: end # last entry of the list
-scrollUp: pageup # scroll article content up
-scrollDown: pagedown # scroll article content down
+  prevFeed: up # previous feed in the navigation pane
+  nextFeed: down # next feed in the navigation pane
+  toggleHideReadFeeds: shift+u # show only unread feeds / all feeds
+  toggleCategoryCollapse: x # collapse/uncollapse current category
 
-toggleRead: m # mark current entry read/unread
-markOlderRead: t # mark all older entries read (undoable)
-markAllRead: shift+a # mark all entries read (undoable)
-toggleShowRead: u # show unread entries / all entries
-toggleSort: s # toggle entry sort order
-toggleStar: f # star/unstar current entry
+  prevItem: left,p,k,q # previous entry
+  nextItem: right,n,j,e,space # next entry
+  firstItem: home # first entry of the list
+  lastItem: end # last entry of the list
+  scrollUp: pageup # scroll article content up
+  scrollDown: pagedown # scroll article content down
 
-openOriginal: v,d # open original article in the OA window
-openOriginalTab: a # open original article in a new browser tab
-fetchFullText: w # fetch and save full article content
-toggleAlwaysOpen: shift+v # always open original link for this feed
-toggleAlwaysFullText: shift+w # auto-fetch full text for this feed
-openComments: c # open comments in a new tab
+  toggleRead: m # mark current entry read/unread
+  markOlderRead: t # mark all older entries read (undoable)
+  markAllRead: shift+a # mark all entries read (undoable)
+  toggleShowRead: u # show unread entries / all entries
+  toggleSort: s # toggle entry sort order
+  toggleStar: f # star/unstar current entry
 
-refreshCounts: r # refresh unread counts
-refreshFeeds: shift+r # fetch feeds and refresh the feed list
-toggleTheme: shift+d # toggle light/dark theme
-help: h,? # show this help (lists your current bindings)
-clearSearch: esc # clear search / close dialogs
+  openOriginal: v,d # open original article in the OA window
+  openOriginalTab: a # open original article in a new browser tab
+  fetchFullText: w # fetch and save full article content
+  toggleAlwaysOpen: shift+v # always open original link for this feed
+  toggleAlwaysFullText: shift+w # auto-fetch full text for this feed
+  openComments: c # open comments in a new tab
+
+  refreshCounts: r # refresh unread counts
+  refreshFeeds: shift+r # fetch feeds and refresh the feed list
+  toggleTheme: shift+d # toggle light/dark theme
+  help: h,? # show this help (lists your current bindings)
+  clearSearch: esc # clear search / close dialogs
