@@ -12,4 +12,4 @@ fi
 [[ -z "$dest" ]] && { echo "No install destination defined!"; exit 2;}
 
 npm run build
-rsync  -SHAaXx --info=progress2 --delete --delete-excluded --force dist/ "${dest%/}/"
+rsync  -SHAaXx --info=progress2 --delete --force dist/ "${dest%/}/"
