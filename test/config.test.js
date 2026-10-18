@@ -122,3 +122,18 @@ test('oaGeometry rejects malformed values', () => {
 		)
 	}
 })
+
+test('oaMode accepts tab, popup, popdecor and legacy window', () => {
+	for (const mode of ['tab', 'popup', 'popdecor', 'window']) {
+		assert.equal(
+			applyDefaults({ url: 'https://x', apiToken: 't', oaMode: mode })
+				.oaMode,
+			mode
+		)
+	}
+	assert.throws(
+		() =>
+			applyDefaults({ url: 'https://x', apiToken: 't', oaMode: 'nope' }),
+		/oaMode/
+	)
+})

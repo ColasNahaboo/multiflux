@@ -51,7 +51,7 @@ export function applyDefaults(raw) {
 	if (!['auto', 'light', 'dark'].includes(theme))
 		throw new Error(`config: invalid theme "${theme}"`)
 	const oaMode = raw.oaMode ?? 'window'
-	if (!['window', 'tab'].includes(oaMode))
+	if (!['tab', 'popup', 'popdecor', 'window'].includes(oaMode))
 		throw new Error(`config: invalid oaMode "${oaMode}"`)
 	const oaGeometry = parseOaGeometry(raw.oaGeometry)
 	return {

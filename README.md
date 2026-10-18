@@ -1,7 +1,10 @@
 # Multiflux
 
 <img src="public/icons/multiflux.svg" align="right" width="200" height="200">Keyboard-first three--plus-one pane web reader for your self-hosted
-[Miniflux](https://miniflux.app/) server.
+[Miniflux](https://miniflux.app/) server, with:
+
+-   "gaming" keyboard navigation (aka WASD) on the left hand to leave the right hand free to use the mouse instead of the VI keys (HJKL)
+-   "3+1" panes: the 3 traditional panes (feeds, articles, article) plus an optrional standalone full browser view of the original article, to make use of modern big wide screens.
 
 ## What it is
 
@@ -14,7 +17,10 @@ server — no backend, no accounts, no store, no telemetry.
 -   Global Unread pseudo-feed honoring Miniflux's "hide globally" flag
 -   Vim-style keyboard navigation (`hjkl` plus `q/e/?` aliases)
 -   Original-Article mode: articles open in a reusable side window whose
-    geometry you control, or in a new tab
+    geometry you control (`oaMode: window`), the same popup with browser
+    chrome when your browser honors it (`popdecor` — Firefox only; Chrome
+    ignores decoration requests for scripted windows and has removed the
+    `location`/`toolbar` features entirely), or in a new tab (`tab`)
 -   On-demand full-text extraction (`w`) and per-feed auto-fetch (`W`), saved
     back to Miniflux
 -   Batch mark-read with 30s undo toasts, auto-read by title keywords
@@ -77,7 +83,7 @@ server — no backend, no accounts, no store, no telemetry.
     url: https://rss.example.org
     apiToken: <your Miniflux API token>
     # theme: auto | light | dark
-    # oaMode: window | tab
+    # oaMode: window | popdecor | tab
     # oaGeometry: right | half | x,y,w,h
     # maxItems: 100
     # refresh: 60
@@ -147,8 +153,7 @@ Check the release notes for new `config.yaml` keys.
 
 v1.x was a Firefox/Chrome extension (a fork of
 [miniflux-companion](https://codeberg.org/gbcox/miniflux-companion), GPL v3).
-The extension was retired in favor of this web app; its code lives on in the
-`multiflux-ext` archive and in git history up to `v1.0.0`.
+The extension was retired in favor of this web app; its code lives in git history up to `v1.0.0`.
 
 ## License
 

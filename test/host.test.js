@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { oaFeatures } from '../src/lib/host.js'
+import { oaFeatures, oaWindowFeatures } from '../src/lib/host.js'
 
 const reader = {
 	screenX: 100,
@@ -42,4 +42,26 @@ test('multi-monitor left negative x works', () => {
 		oaFeatures(cfg, reader),
 		'left=-1920,top=0,width=1280,height=1024'
 	)
+})
+
+test('popup mode features are geometry only', () => {
+	assert.equal(
+		oaWindowFeatures('popup', { preset: 'right' }, reader),
+		'left=1300,top=50,width=1200,height=900'
+	)
+})
+
+test('popdecor adds browser chrome features (Firefox)', () => {
+	const features = oaWindowFeatures('popdecor', { preset: 'right' }, reader)
+	assert.match(features, /^left=1300,top=50,width=1200,height=900/)
+	for (const part of [
+		'location=yes',
+		'toolbar=yes',
+		'menubar=yes',
+		'scrollbars=yes',
+		'status=yes',
+		'resizable=yes',
+	]) {
+		assert.ok(features.includes(part), features)
+	}
 })

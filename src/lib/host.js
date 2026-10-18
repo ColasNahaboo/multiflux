@@ -28,6 +28,17 @@ export function oaFeatures(geometry, win) {
 	)},height=${Math.round(h)}`
 }
 
+export function oaWindowFeatures(mode, geometry, win) {
+	const geometryFeatures = oaFeatures(geometry, win)
+	if (mode === 'popdecor') {
+		// Legacy chrome features: Firefox may honor them; Chrome ignores
+		// them (kept as popup). scrollbars/status/resizable must be yes or
+		// the spec says to open a tab instead of a window.
+		return `${geometryFeatures},location=yes,toolbar=yes,menubar=yes,personalbar=yes,scrollbars=yes,status=yes,resizable=yes`
+	}
+	return geometryFeatures
+}
+
 export function openOriginalArticle(url) {
 	if (!url) return
 	const config = getRuntimeConfig()
@@ -37,7 +48,7 @@ export function openOriginalArticle(url) {
 	}
 	// Feature string is required: featureless window.open() opens a tab in
 	// modern browsers. The named target still reuses the same window.
-	const features = oaFeatures(config.oaGeometry, window)
+	const features = oaWindowFeatures(config.oaMode, config.oaGeometry, window)
 	const win = window.open(url, OA_WINDOW_NAME, features)
 	if (!win) {
 		window.open(url, '_blank', 'noopener')

@@ -81,7 +81,9 @@ npm run dev           # vite dev server (needs a config.yaml in dist/ or public/
 On `m`: `/etc/multiflux/config.yaml` (edit by hand, reload page to apply;
 gitignored; see `config.example.yaml` for a documented sample). Keys: `url`,
 `apiToken` (required); `theme`
-(auto|light|dark), `oaMode` (window|tab), `oaGeometry` (`right` = right of
+(auto|light|dark), `oaMode` (window|popdecor|tab; popdecor requests browser
+chrome via legacy window features — Firefox only, Chrome keeps the popup
+undecorated), `oaGeometry` (`right` = right of
 reader same size [default], `half` = right screen half, or explicit
 `x,y,w,h` pixels — negative x for a left monitor), `maxItems` (10..1000),
 `refresh` (minutes, 0=off), `autoReadTitleKeywords` (block list). Reload the
