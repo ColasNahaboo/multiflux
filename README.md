@@ -1,6 +1,6 @@
 # Multiflux
 
-Keyboard-first three-pane web reader for your self-hosted
+<img src="public/icons/multiflux.svg" align="right" width="200" height="200">Keyboard-first three--plus-one pane web reader for your self-hosted
 [Miniflux](https://miniflux.app/) server.
 
 ## What it is
