@@ -1,10 +1,12 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
-	readAlwaysFullTextFeedIds,
-	writeAlwaysFullTextFeedIds,
+	readFullTextState,
+	writeFullTextState,
 	hasFetchedFullTextEntry,
 	markFullTextEntryFetched,
+	fullTextActiveForFeed,
+	toggleFullTextFeed,
 } from '../src/lib/alwaysFullText.js'
 
 const makeStorage = (initial = {}) => {
@@ -17,20 +19,35 @@ const makeStorage = (initial = {}) => {
 	}
 }
 
-test('reads and writes deduplicated positive feed IDs', () => {
+test('legacy array storage migrates to the enabled list', () => {
 	const storage = makeStorage({
 		always_full_text_feeds: JSON.stringify([3, 3, '4', -1]),
 	})
-	assert.deepEqual(readAlwaysFullTextFeedIds(storage), [3])
-
-	writeAlwaysFullTextFeedIds(storage, [2, 2, 0, 5])
-	assert.equal(storage.getItem('always_full_text_feeds'), '[2,5]')
+	assert.deepEqual(readFullTextState(storage), {
+		enabled: [3],
+		disabled: [],
+	})
 })
 
-test('corrupt feed preferences safely read as an empty list', () => {
+test('reads and writes deduplicated positive feed IDs per list', () => {
+	const storage = makeStorage()
+	writeFullTextState(storage, {
+		enabled: [2, 2, 0, 5],
+		disabled: [7, 'x', -3, null],
+	})
+	assert.deepEqual(readFullTextState(storage), {
+		enabled: [2, 5],
+		disabled: [7],
+	})
+})
+
+test('corrupt feed preferences safely read as empty lists', () => {
 	assert.deepEqual(
-		readAlwaysFullTextFeedIds(makeStorage({ always_full_text_feeds: '{' })),
-		[]
+		readFullTextState(makeStorage({ always_full_text_feeds: '{' })),
+		{
+			enabled: [],
+			disabled: [],
+		}
 	)
 })
 
@@ -70,4 +87,48 @@ test('bounds the fetched-entry cache', () => {
 	assert.equal(cache.length, 5000)
 	assert.equal(cache[0].id, 2)
 	assert.equal(cache.at(-1).id, 5001)
+})
+
+const idle = { enabled: [], disabled: [] }
+
+test('server crawler flag enables full text without manual toggle', () => {
+	assert.equal(fullTextActiveForFeed({ id: 9, crawler: true }, idle), true)
+	assert.equal(
+		fullTextActiveForFeed(
+			{ id: 9, crawler: false },
+			{ ...idle, enabled: [9] }
+		),
+		true
+	)
+	assert.equal(fullTextActiveForFeed({ id: 9, crawler: false }, idle), false)
+	assert.equal(
+		fullTextActiveForFeed(undefined, { ...idle, enabled: [9] }),
+		false
+	)
+})
+
+test('W turns server crawler auto-fetch off and back on', () => {
+	let state = toggleFullTextFeed(idle, { id: 9, crawler: true }, true)
+	assert.deepEqual(state, { enabled: [], disabled: [9] })
+	assert.equal(fullTextActiveForFeed({ id: 9, crawler: true }, state), false)
+	state = toggleFullTextFeed(state, { id: 9, crawler: true }, false)
+	assert.deepEqual(state, idle)
+	assert.equal(fullTextActiveForFeed({ id: 9, crawler: true }, state), true)
+})
+
+test('W on a manual feed keeps the enabled list', () => {
+	let state = toggleFullTextFeed(
+		{ enabled: [5], disabled: [] },
+		{ id: 5, crawler: false },
+		true
+	)
+	assert.deepEqual(state, idle)
+	state = toggleFullTextFeed(state, { id: 5, crawler: false }, false)
+	assert.deepEqual(state, { enabled: [5], disabled: [] })
+})
+
+test('W on a non-crawler feed can pre-enable it', () => {
+	const state = toggleFullTextFeed(idle, { id: 7, crawler: false }, false)
+	assert.deepEqual(state, { enabled: [7], disabled: [] })
+	assert.equal(fullTextActiveForFeed({ id: 7, crawler: false }, state), true)
 })

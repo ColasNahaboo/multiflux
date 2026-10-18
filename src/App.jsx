@@ -16,8 +16,10 @@ import Icon from './Icon'
 import { PRIMARY_HEADER_HEIGHT } from './layout'
 import { readAlwaysOpenFeedIds, writeAlwaysOpenFeedIds } from './lib/alwaysOpen'
 import {
-	readAlwaysFullTextFeedIds,
-	writeAlwaysFullTextFeedIds,
+	readFullTextState,
+	writeFullTextState,
+	fullTextActiveForFeed,
+	toggleFullTextFeed,
 } from './lib/alwaysFullText'
 import { readStoredTheme, writeStoredTheme } from './lib/host'
 
@@ -253,8 +255,8 @@ function App({ config }) {
 	const [alwaysOpenFeedIds, setAlwaysOpenFeedIdsState] = useState(() =>
 		readAlwaysOpenFeedIds(localStorage)
 	)
-	const [alwaysFullTextFeedIds, setAlwaysFullTextFeedIdsState] = useState(
-		() => readAlwaysFullTextFeedIds(localStorage)
+	const [fullTextState, setFullTextState] = useState(() =>
+		readFullTextState(localStorage)
 	)
 	const [feedPaneWidth, setFeedPaneWidth] = useState(getInitialFeedWidth)
 	const [itemPaneWidth, setItemPaneWidth] = useState(getInitialItemWidth)
@@ -328,7 +330,7 @@ function App({ config }) {
 		? alwaysOpenFeedIds.includes(alwaysOpenFeed.id)
 		: false
 	const alwaysFullTextActive = alwaysOpenFeed
-		? alwaysFullTextFeedIds.includes(alwaysOpenFeed.id)
+		? fullTextActiveForFeed(alwaysOpenFeed, fullTextState)
 		: false
 	const toggleAlwaysOpen = () => {
 		if (!alwaysOpenFeed) return
@@ -341,12 +343,13 @@ function App({ config }) {
 	}
 	const toggleAlwaysFullText = () => {
 		if (!alwaysOpenFeed) return
-		const id = alwaysOpenFeed.id
-		const next = alwaysFullTextActive
-			? alwaysFullTextFeedIds.filter((x) => x !== id)
-			: [...alwaysFullTextFeedIds, id]
-		setAlwaysFullTextFeedIdsState(next)
-		writeAlwaysFullTextFeedIds(localStorage, next)
+		const next = toggleFullTextFeed(
+			fullTextState,
+			alwaysOpenFeed,
+			alwaysFullTextActive
+		)
+		setFullTextState(next)
+		writeFullTextState(localStorage, next)
 	}
 
 	useEffect(() => {
@@ -984,7 +987,7 @@ function App({ config }) {
 		() => {
 			toggleAlwaysFullText()
 		},
-		[alwaysOpenFeed, alwaysFullTextActive, alwaysFullTextFeedIds]
+		[alwaysOpenFeed, alwaysFullTextActive, fullTextState]
 	)
 
 	return (

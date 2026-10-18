@@ -305,56 +305,62 @@ function ItemViewer(props) {
 	const openOrReuseOA = useCallback((url) => {
 		openOriginalArticle(url)
 	}, [])
-	const fetchFullText = useCallback(async () => {
-		if (!item || fetchingFullTextRef.current.has(item.id)) return
+	const fetchFullText = useCallback(
+		async ({ silent = false } = {}) => {
+			if (!item || fetchingFullTextRef.current.has(item.id)) return
 
-		const entryId = item.id
-		fetchingFullTextRef.current.add(entryId)
-		setFetchingFullTextIds((current) => new Set(current).add(entryId))
-		setFullTextStatus((status) =>
-			status?.itemId === entryId ? null : status
-		)
-
-		try {
-			const fetchedContent = await apiCall(
-				fetchContentPath(entryId),
-				props.errorHandler
+			const entryId = item.id
+			const reportError = silent ? () => {} : props.errorHandler
+			fetchingFullTextRef.current.add(entryId)
+			setFetchingFullTextIds((current) => new Set(current).add(entryId))
+			setFullTextStatus((status) =>
+				status?.itemId === entryId ? null : status
 			)
-			if (typeof fetchedContent?.content !== 'string') {
-				props.errorHandler('Miniflux returned no article content.')
-				return
+
+			try {
+				const fetchedContent = await apiCall(
+					fetchContentPath(entryId),
+					reportError
+				)
+				if (typeof fetchedContent?.content !== 'string') {
+					reportError('Miniflux returned no article content.')
+					return
+				}
+
+				props.onContentFetched(
+					mergeFetchedContent(item, fetchedContent)
+				)
+				markFullTextEntryFetched(localStorage, {
+					id: entryId,
+					content: fetchedContent.content,
+				})
+				setLastFetchedFullTextId(entryId)
+				setFullTextStatus(
+					fetchedContent.content === item.content && !silent
+						? {
+								itemId: entryId,
+								message:
+									'Miniflux found no additional article content.',
+						  }
+						: null
+				)
+			} catch {
+				// apiCall reports request failures through the app-level error handler.
+			} finally {
+				fetchingFullTextRef.current.delete(entryId)
+				setFetchingFullTextIds((current) => {
+					const next = new Set(current)
+					next.delete(entryId)
+					return next
+				})
 			}
-
-			props.onContentFetched(mergeFetchedContent(item, fetchedContent))
-			markFullTextEntryFetched(localStorage, {
-				id: entryId,
-				content: fetchedContent.content,
-			})
-			setLastFetchedFullTextId(entryId)
-			setFullTextStatus(
-				fetchedContent.content === item.content
-					? {
-							itemId: entryId,
-							message:
-								'Miniflux found no additional article content.',
-					  }
-					: null
-			)
-		} catch {
-			// apiCall reports request failures through the app-level error handler.
-		} finally {
-			fetchingFullTextRef.current.delete(entryId)
-			setFetchingFullTextIds((current) => {
-				const next = new Set(current)
-				next.delete(entryId)
-				return next
-			})
-		}
-	}, [item, props.errorHandler, props.onContentFetched])
+		},
+		[item, props.errorHandler, props.onContentFetched]
+	)
 
 	useHotkeys('f', () => toggleStar(), [item])
 	useHotkeys('v', () => item && openOrReuseOA(item.url), [item])
-	useHotkeys('w', fetchFullText, [fetchFullText])
+	useHotkeys('w', () => fetchFullText(), [fetchFullText])
 	useHotkeys('c', () => commentsUrl && window.open(commentsUrl, '_blank'), [
 		commentsUrl,
 	])
@@ -384,7 +390,7 @@ function ItemViewer(props) {
 	useEffect(() => {
 		if (!props.alwaysFullTextActive || !item) return
 		if (hasFetchedFullTextEntry(localStorage, item)) return
-		fetchFullText()
+		fetchFullText({ silent: true })
 	}, [item?.id, item?.content, props.alwaysFullTextActive, fetchFullText])
 
 	const openedItemRef = useRef()
@@ -547,7 +553,7 @@ function ItemViewer(props) {
 						aria-label={fullTextActionLabel}
 						disabled={isFetchingFullText}
 						aria-busy={isFetchingFullText}
-						onClick={fetchFullText}
+						onClick={() => fetchFullText()}
 					>
 						<Icon
 							name={isFetchingFullText ? 'refresh' : 'newspaper'}

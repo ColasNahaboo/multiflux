@@ -2,13 +2,22 @@ const FEED_STORAGE_KEY = 'always_full_text_feeds'
 const FETCHED_ENTRY_STORAGE_KEY = 'full_text_fetched_entries'
 const MAX_FETCHED_ENTRY_IDS = 5000
 
-const readFeedIds = (storage) => {
+const sanitizeIds = (ids) =>
+	Array.isArray(ids)
+		? [...new Set(ids.filter((id) => Number.isInteger(id) && id > 0))]
+		: []
+
+const readFeedState = (storage) => {
 	try {
-		const ids = JSON.parse(storage.getItem(FEED_STORAGE_KEY) || 'null')
-		if (!Array.isArray(ids)) return []
-		return [...new Set(ids.filter((id) => Number.isInteger(id) && id > 0))]
+		const value = JSON.parse(storage.getItem(FEED_STORAGE_KEY) || 'null')
+		if (Array.isArray(value))
+			return { enabled: sanitizeIds(value), disabled: [] }
+		return {
+			enabled: sanitizeIds(value?.enabled),
+			disabled: sanitizeIds(value?.disabled),
+		}
 	} catch {
-		return []
+		return { enabled: [], disabled: [] }
 	}
 }
 
@@ -40,17 +49,44 @@ const contentSignature = (content) => {
 	return `${text.length}:${hash >>> 0}`
 }
 
-const writeFeedIds = (storage, ids) => {
-	const validIds = Array.isArray(ids)
-		? ids.filter((id) => Number.isInteger(id) && id > 0)
-		: []
-	storage.setItem(FEED_STORAGE_KEY, JSON.stringify([...new Set(validIds)]))
+const writeFeedState = (storage, state) => {
+	storage.setItem(
+		FEED_STORAGE_KEY,
+		JSON.stringify({
+			enabled: sanitizeIds(state.enabled),
+			disabled: sanitizeIds(state.disabled),
+		})
+	)
 }
 
-export const readAlwaysFullTextFeedIds = (storage) => readFeedIds(storage)
+export const fullTextActiveForFeed = (feed, state) => {
+	if (!Number.isInteger(feed?.id)) return false
+	if (state.disabled.includes(feed.id)) return false
+	return Boolean(feed.crawler) || state.enabled.includes(feed.id)
+}
 
-export const writeAlwaysFullTextFeedIds = (storage, ids) =>
-	writeFeedIds(storage, ids)
+export const toggleFullTextFeed = (state, feed, active) => {
+	const id = feed.id
+	const without = (list) => list.filter((x) => x !== id)
+	if (active)
+		return {
+			enabled: without(state.enabled),
+			disabled: feed.crawler
+				? [...without(state.disabled), id]
+				: without(state.disabled),
+		}
+	return {
+		enabled: feed.crawler
+			? without(state.enabled)
+			: [...without(state.enabled), id],
+		disabled: without(state.disabled),
+	}
+}
+
+export const readFullTextState = (storage) => readFeedState(storage)
+
+export const writeFullTextState = (storage, state) =>
+	writeFeedState(storage, state)
 
 export const hasFetchedFullTextEntry = (storage, entry) => {
 	if (!entry || !Number.isInteger(entry.id) || entry.id <= 0) return false
