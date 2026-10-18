@@ -4,6 +4,7 @@ import styled from 'styled-components'
 import { useHotkeys } from 'react-hotkeys-hook'
 import Icon from './Icon'
 import { beginAutoRead } from './lib/settings'
+import { mergeFetchedContent } from './lib/entryContent'
 import { bookmarkStateControlStyles } from './readStateStyles'
 import { PRIMARY_HEADER_HEIGHT } from './layout'
 
@@ -512,6 +513,34 @@ function FeedItemHeader(props) {
 					)}
 					{props.alwaysOpenFeed && (
 						<ControlButton
+							type='button'
+							onClick={props.onToggleAlwaysFullText}
+							aria-pressed={props.alwaysFullTextActive}
+							title={`${
+								props.alwaysFullTextActive
+									? 'Disable'
+									: 'Enable'
+							} automatic full-text fetching on first view for ${
+								props.alwaysOpenFeed.title
+							}`}
+							aria-label={`${
+								props.alwaysFullTextActive
+									? 'Disable'
+									: 'Enable'
+							} automatic full-text fetching on first view for ${
+								props.alwaysOpenFeed.title
+							}`}
+							style={
+								props.alwaysFullTextActive
+									? { color: 'var(--accent, #0078d4)' }
+									: undefined
+							}
+						>
+							<Icon name='newspaper' size={16} />
+						</ControlButton>
+					)}
+					{props.alwaysOpenFeed && (
+						<ControlButton
 							onClick={props.onToggleAlwaysOpen}
 							aria-pressed={props.alwaysOpenActive}
 							title={
@@ -673,6 +702,28 @@ function ItemBrowser(props) {
 		// Reconcile only when a completed bookmark mutation is published.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [props.bookmarkReconciliation])
+
+	useEffect(() => {
+		const updatedItem = props.contentReconciliation
+		if (!updatedItem) return
+
+		setItems((currentItems) => {
+			let reconciledItem
+			const nextItems = currentItems.map((item) => {
+				if (item.id !== updatedItem.id) return item
+				reconciledItem = mergeFetchedContent(item, updatedItem)
+				return reconciledItem
+			})
+
+			if (reconciledItem && props.currentItem?.id === updatedItem.id) {
+				props.onItemChange(reconciledItem)
+			}
+
+			return nextItems
+		})
+		// Reconcile the list only when a completed full-text fetch is published.
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [props.contentReconciliation])
 
 	useEffect(() => {
 		let cancelled = false
@@ -908,6 +959,8 @@ function ItemBrowser(props) {
 				alwaysOpenFeed={props.alwaysOpenFeed}
 				alwaysOpenActive={props.alwaysOpenActive}
 				onToggleAlwaysOpen={props.onToggleAlwaysOpen}
+				alwaysFullTextActive={props.alwaysFullTextActive}
+				onToggleAlwaysFullText={props.onToggleAlwaysFullText}
 			/>
 
 			{undo && (

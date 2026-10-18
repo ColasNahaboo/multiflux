@@ -35,7 +35,9 @@ Key facts (verified against Miniflux source + live server, 2026-10):
     edited by hand; there is NO settings page.
 -   `config.yaml` is protected by Apache: `<RequireAny>` LAN IP OR Basic auth
     (see DEPLOY below). Theme override persists in `localStorage`
-    (`multiflux_theme`); always-open-original feed IDs too (`always_open_original_feeds`).
+    (`multiflux_theme`); always-open-original and auto-full-text feed IDs too
+    (`always_open_original_feeds`, `always_full_text_feeds`), plus a bounded
+    per-entry content-signature cache (`full_text_fetched_entries`).
 
 ## Project Structure
 
@@ -50,6 +52,8 @@ src/ItemViewer.jsx    Article pane (OA window, share buttons)
 src/KeyHelpModal.jsx  Keyboard shortcuts help
 src/lib/util.jsx      Miniflux API client (fetch wrapper)
 src/lib/settings.js   Keyword matching, auto-read, URL normalize, unread totals
+src/lib/entryContent.js Miniflux full-text endpoint and entry content merge
+src/lib/alwaysFullText.js Per-feed auto-fetch preference and fetched-entry cache
 src/lib/config.js     config.yaml fetch + minimal YAML parser + defaults
 src/lib/host.js       Host adapter: OA window reuse (window.open named), theme storage
 src/lib/alwaysOpen.js Always-open-original feed IDs (localStorage)
@@ -57,7 +61,7 @@ src/runtimeConfig.js  Config singleton
 src/layout.js         Pane layout persistence (localStorage)
 src/themes.js         Light/dark/auto themes
 public/icons/         Share-button icons (copied to dist by Vite)
-test/                 node --test suites (config, settings, host geometry, alwaysOpen)
+test/                 node --test suites (config, settings, host geometry, feed modes)
 config.example.yaml   Documented sample config
 ```
 
@@ -134,26 +138,28 @@ page to apply edits. The settings gear button just reloads.
 
 ## Keyboard Shortcuts
 
-| Key                         | Action                                     |
-| --------------------------- | ------------------------------------------ |
-| `Left / p / k / q`          | Previous item                              |
-| `Right / n / j / e / Space` | Next item                                  |
-| `m`                         | Mark item read/unread                      |
-| `t`                         | Mark all older items read                  |
-| `A`                         | Mark all items read                        |
-| `u`                         | Toggle unread/all items                    |
-| `s`                         | Toggle item sort order                     |
-| `f`                         | Star/unstar item                           |
-| `v / w`                     | Open original article in OA window         |
-| `V`                         | Always open original article for this feed |
-| `c`                         | Open comments in new tab                   |
-| `r`                         | Refresh unread counts                      |
-| `R`                         | Fetch feeds and refresh feed list          |
-| `Shift+D`                   | Toggle light/dark theme                    |
-| `h / ?`                     | Show keyboard shortcuts                    |
-| `Up/Down`                   | Navigate feeds                             |
-| `x`                         | Collapse/uncollapse category               |
-| `U`                         | Toggle unread/all feeds                    |
+| Key                         | Action                                        |
+| --------------------------- | --------------------------------------------- |
+| `Left / p / k / q`          | Previous item                                 |
+| `Right / n / j / e / Space` | Next item                                     |
+| `m`                         | Mark item read/unread                         |
+| `t`                         | Mark all older items read                     |
+| `A`                         | Mark all items read                           |
+| `u`                         | Toggle unread/all items                       |
+| `s`                         | Toggle item sort order                        |
+| `f`                         | Star/unstar item                              |
+| `v`                         | Open original article in OA window            |
+| `w`                         | Fetch and save full article content           |
+| `V`                         | Always open original article for this feed    |
+| `W`                         | Toggle auto-fetch on first view for this feed |
+| `c`                         | Open comments in new tab                      |
+| `r`                         | Refresh unread counts                         |
+| `R`                         | Fetch feeds and refresh feed list             |
+| `Shift+D`                   | Toggle light/dark theme                       |
+| `h / ?`                     | Show keyboard shortcuts                       |
+| `Up/Down`                   | Navigate feeds                                |
+| `x`                         | Collapse/uncollapse category                  |
+| `U`                         | Toggle unread/all feeds                       |
 
 ## Features beyond upstream miniflux-companion
 
@@ -162,7 +168,8 @@ page to apply edits. The settings gear button just reloads.
     tab, geometry via `oaGeometry` (see `oaFeatures()` in `src/lib/host.js`,
     unit-tested; headless Chromium ignores features — verify placement in a
     real browser only)
--   Vim-style aliases (q/k prev, e/j next, w open article, ? help)
+-   Vim-style aliases (q/k prev, e/j next, w fetch full text, ? help)
+-   `W` toggles per-feed auto-fetch; content is fetched and persisted on first view
 -   `t` mark-all-older-as-read + undo toasts for `t`/`A` (30s)
 -   Entry sort direction / category order from server prefs
 -   Auto-read by title keywords

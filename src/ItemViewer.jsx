@@ -1,6 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { formatDate } from './lib/util'
+import { apiCall, formatDate } from './lib/util'
 import { openOriginalArticle } from './lib/host'
+import { fetchContentPath, mergeFetchedContent } from './lib/entryContent'
+import {
+	hasFetchedFullTextEntry,
+	markFullTextEntryFetched,
+} from './lib/alwaysFullText'
 import styled from 'styled-components'
 import { useHotkeys } from 'react-hotkeys-hook'
 import Icon from './Icon'
@@ -54,6 +59,15 @@ const ReaderArticle = styled.article`
 	box-sizing: border-box;
 	color: ${(props) => props.theme.text};
 	overflow-wrap: anywhere;
+`
+
+const FullTextStatus = styled.div`
+	max-width: 960px;
+	margin: 12px auto 0;
+	padding: 0 clamp(20px, 5%, 42px);
+	box-sizing: border-box;
+	font-size: 13px;
+	color: ${(props) => props.theme.muted};
 `
 
 const ItemTitle = styled.h1`
@@ -280,14 +294,67 @@ function ItemViewer(props) {
 	const topRef = useRef()
 	const articleScrollRef = useRef()
 	const shareFeedbackTimersRef = useRef({})
+	const fetchingFullTextRef = useRef(new Set())
 	const [activeShareControls, setActiveShareControls] = useState({})
+	const [fetchingFullTextIds, setFetchingFullTextIds] = useState(
+		() => new Set()
+	)
+	const [lastFetchedFullTextId, setLastFetchedFullTextId] = useState(null)
+	const [fullTextStatus, setFullTextStatus] = useState(null)
 
 	const openOrReuseOA = useCallback((url) => {
 		openOriginalArticle(url)
 	}, [])
+	const fetchFullText = useCallback(async () => {
+		if (!item || fetchingFullTextRef.current.has(item.id)) return
+
+		const entryId = item.id
+		fetchingFullTextRef.current.add(entryId)
+		setFetchingFullTextIds((current) => new Set(current).add(entryId))
+		setFullTextStatus((status) =>
+			status?.itemId === entryId ? null : status
+		)
+
+		try {
+			const fetchedContent = await apiCall(
+				fetchContentPath(entryId),
+				props.errorHandler
+			)
+			if (typeof fetchedContent?.content !== 'string') {
+				props.errorHandler('Miniflux returned no article content.')
+				return
+			}
+
+			props.onContentFetched(mergeFetchedContent(item, fetchedContent))
+			markFullTextEntryFetched(localStorage, {
+				id: entryId,
+				content: fetchedContent.content,
+			})
+			setLastFetchedFullTextId(entryId)
+			setFullTextStatus(
+				fetchedContent.content === item.content
+					? {
+							itemId: entryId,
+							message:
+								'Miniflux found no additional article content.',
+					  }
+					: null
+			)
+		} catch {
+			// apiCall reports request failures through the app-level error handler.
+		} finally {
+			fetchingFullTextRef.current.delete(entryId)
+			setFetchingFullTextIds((current) => {
+				const next = new Set(current)
+				next.delete(entryId)
+				return next
+			})
+		}
+	}, [item, props.errorHandler, props.onContentFetched])
 
 	useHotkeys('f', () => toggleStar(), [item])
-	useHotkeys('v,w', () => item && openOrReuseOA(item.url), [item])
+	useHotkeys('v', () => item && openOrReuseOA(item.url), [item])
+	useHotkeys('w', fetchFullText, [fetchFullText])
 	useHotkeys('c', () => commentsUrl && window.open(commentsUrl, '_blank'), [
 		commentsUrl,
 	])
@@ -313,6 +380,12 @@ function ItemViewer(props) {
 	useEffect(() => {
 		if (articleScrollRef.current) articleScrollRef.current.scrollTop = 0
 	}, [props.currentItem])
+
+	useEffect(() => {
+		if (!props.alwaysFullTextActive || !item) return
+		if (hasFetchedFullTextEntry(localStorage, item)) return
+		fetchFullText()
+	}, [item?.id, item?.content, props.alwaysFullTextActive, fetchFullText])
 
 	const openedItemRef = useRef()
 	useEffect(() => {
@@ -370,6 +443,12 @@ function ItemViewer(props) {
 			console.warn('Unable to copy article title and link', error)
 		}
 	}
+	const isFetchingFullText = item ? fetchingFullTextIds.has(item.id) : false
+	const fullTextActionLabel = isFetchingFullText
+		? 'Fetching full text…'
+		: lastFetchedFullTextId === item?.id
+		? 'Refresh full text (w)'
+		: 'Fetch and save full text (w)'
 
 	const toggleStar = async () => {
 		if (item) await props.onToggleBookmark(item)
@@ -462,6 +541,19 @@ function ItemViewer(props) {
 							aria-hidden='true'
 						/>
 					</ActionButton>
+					<ActionButton
+						type='button'
+						title={fullTextActionLabel}
+						aria-label={fullTextActionLabel}
+						disabled={isFetchingFullText}
+						aria-busy={isFetchingFullText}
+						onClick={fetchFullText}
+					>
+						<Icon
+							name={isFetchingFullText ? 'refresh' : 'newspaper'}
+							size={16}
+						/>
+					</ActionButton>
 					<ReadStateAction
 						$isRead={item.status !== 'unread'}
 						title={
@@ -500,6 +592,11 @@ function ItemViewer(props) {
 				</HeaderActions>
 			</ItemHeader>
 			<ArticleScroll ref={articleScrollRef}>
+				{fullTextStatus?.itemId === item.id && (
+					<FullTextStatus role='status'>
+						{fullTextStatus.message}
+					</FullTextStatus>
+				)}
 				<ReaderArticle>
 					<ItemContent
 						id='itemcontent'

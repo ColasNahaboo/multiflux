@@ -12,9 +12,11 @@ server — no backend, no accounts, no store, no telemetry.
 
 -   Three panes: categories/feeds → entry list → article content
 -   Global Unread pseudo-feed honoring Miniflux's "hide globally" flag
--   Vim-style keyboard navigation (`hjkl` plus `q/e/w/?` aliases)
+-   Vim-style keyboard navigation (`hjkl` plus `q/e/?` aliases)
 -   Original-Article mode: articles open in a reusable side window whose
     geometry you control, or in a new tab
+-   On-demand full-text extraction (`w`) and per-feed auto-fetch (`W`), saved
+    back to Miniflux
 -   Batch mark-read with 30s undo toasts, auto-read by title keywords
 -   Light/dark/auto themes; sort and category order from server preferences
 
@@ -99,29 +101,33 @@ rsync -a --delete dist/ yourserver:/var/www/multiflux/
 
 Nothing else: settings live in `config.yaml` (outside the synced directory),
 per-browser state (theme override, pane sizes, always-open feeds) lives in
-`localStorage`. There is no database and no server component to migrate.
+`localStorage`. This also stores per-feed auto-full-text preferences and a
+bounded cache of entries already fetched. There is no database and no server
+component to migrate.
 Check the release notes for new `config.yaml` keys.
 
 ## Keyboard shortcuts
 
-| Key                         | Action                                     |
-| --------------------------- | ------------------------------------------ |
-| `Left / p / k / q`          | Previous item                              |
-| `Right / n / j / e / Space` | Next item                                  |
-| `m`                         | Mark item read/unread                      |
-| `t`                         | Mark all older items read (with undo)      |
-| `A`                         | Mark all items read (with undo)            |
-| `u` / `U`                   | Toggle unread/all items / feeds            |
-| `s`                         | Toggle item sort order                     |
-| `f`                         | Star/unstar item                           |
-| `v / w`                     | Open original article in OA window         |
-| `V`                         | Always open original article for this feed |
-| `c`                         | Open comments in new tab                   |
-| `r` / `R`                   | Refresh counts / fetch feeds               |
-| `Shift+D`                   | Toggle light/dark theme                    |
-| `h / ?`                     | Keyboard help                              |
-| `Up/Down`                   | Navigate feeds                             |
-| `x`                         | Collapse/uncollapse category               |
+| Key                         | Action                                        |
+| --------------------------- | --------------------------------------------- |
+| `Left / p / k / q`          | Previous item                                 |
+| `Right / n / j / e / Space` | Next item                                     |
+| `m`                         | Mark item read/unread                         |
+| `t`                         | Mark all older items read (with undo)         |
+| `A`                         | Mark all items read (with undo)               |
+| `u` / `U`                   | Toggle unread/all items / feeds               |
+| `s`                         | Toggle item sort order                        |
+| `f`                         | Star/unstar item                              |
+| `v`                         | Open original article in OA window            |
+| `w`                         | Fetch and save full article content           |
+| `V`                         | Always open original article for this feed    |
+| `W`                         | Toggle auto-fetch on first view for this feed |
+| `c`                         | Open comments in new tab                      |
+| `r` / `R`                   | Refresh counts / fetch feeds                  |
+| `Shift+D`                   | Toggle light/dark theme                       |
+| `h / ?`                     | Keyboard help                                 |
+| `Up/Down`                   | Navigate feeds                                |
+| `x`                         | Collapse/uncollapse category                  |
 
 ## History
 
