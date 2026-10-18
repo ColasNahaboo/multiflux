@@ -1,0 +1,15 @@
+#!/bin/bash
+# shellcheck disable=SC1090,SC2155 # source files, declare&assign
+set -euo pipefail
+
+dest=''
+if [[ -v 1 ]]; then dest="$1"
+elif [[ -v MULTIFLUX_INSTALL ]]; then dest="$MULTIFLUX_INSTALL"
+elif [[ -s .install-dir ]]; then dest="$(cat .install-dir)"
+else
+    echo "No install destination defined!"; exit 1
+fi
+[[ -z "$dest" ]] && { echo "No install destination defined!"; exit 2;}
+
+npm run build
+rsync  -SHAaXx --info=progress2 --delete --delete-excluded --force dist/ "${dest%/}/"

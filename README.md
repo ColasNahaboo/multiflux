@@ -32,17 +32,31 @@ server — no backend, no accounts, no store, no telemetry.
 
 ## Installation
 
-1.  **Build**
+1.  **Build and deploy** with the provided `INSTALL` script (runs
+    `npm run build`, then rsyncs `dist/` — with `--delete` — to the target
+    directory):
 
     ```bash
     git clone https://github.com/ColasNahaboo/multiflux && cd multiflux
-    npm install && npm run build   # output in dist/
+    npm install
+    ./INSTALL /var/www/multiflux
     ```
 
-2.  **Deploy the files** to a directory served by your web server, e.g.
-    `/var/www/multiflux`, reachable under some path such as `/mf/`. For
-    Apache behind which Miniflux is reverse-proxied, this goes **before** the
-    catch-all `ProxyPass`:
+    The destination can also come from the `MULTIFLUX_INSTALL` environment
+    variable, or from a `.install-dir` file in the repo (one path, gitignored)
+    so repeated upgrades are just `./INSTALL`:
+
+    ```bash
+    echo /var/www/multiflux > .install-dir   # remember it
+    MULTIFLUX_INSTALL=/var/www/multiflux ./INSTALL   # one-off override
+    ```
+
+    Precedence: argument → `MULTIFLUX_INSTALL` → `.install-dir`. The target
+    may be any path rsync understands, including remote (`host:/path`).
+
+2.  **Serve it** from a directory reachable under some path such as `/mf/`.
+    For Apache behind which Miniflux is reverse-proxied, this goes **before**
+    the catch-all `ProxyPass`:
 
     ```apache
     Alias /mf /var/www/multiflux
@@ -96,7 +110,7 @@ server — no backend, no accounts, no store, no telemetry.
 ```bash
 git pull
 npm install && npm test
-rsync -a --delete dist/ yourserver:/var/www/multiflux/
+./INSTALL   # destination from .install-dir / MULTIFLUX_INSTALL
 ```
 
 Nothing else: settings live in `config.yaml` (outside the synced directory),
