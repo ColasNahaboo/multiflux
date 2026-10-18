@@ -1055,10 +1055,24 @@ function App({ config }) {
 									</ClickNHold>
 									<FloatingButton
 										onClick={() => window.location.reload()}
-										title='Settings live in config.yaml — reload to apply changes'
+										title={`Edit the file ${
+											config.configPath
+										} on server ${
+											new URL(config.server).host
+										} to change settings, and then reload multiflux`}
 										aria-label='Reload to apply config.yaml settings'
 									>
 										<Icon name='settings' />
+									</FloatingButton>
+									<FloatingButton
+										as='a'
+										href='https://github.com/ColasNahaboo/multiflux'
+										target='_blank'
+										rel='noreferrer'
+										title={`Multiflux v${__APP_VERSION__} on GitHub`}
+										aria-label='Multiflux on GitHub'
+									>
+										<Icon name='github' />
 									</FloatingButton>
 								</FeedToolbar>
 								{searchOpen && (

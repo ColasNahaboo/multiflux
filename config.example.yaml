@@ -5,6 +5,8 @@
 url: https://rss.nahaboo.org
 apiToken: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
 # Optional (defaults shown):
+# configPath: /etc/multiflux/config.yaml   # where this file lives on the
+#                        # server — shown in the settings button tooltip
 # theme: auto            # auto | light | dark
 # oaMode: window         # window = reuse a named "multiflux-oa" window,
 #                        # tab    = open original articles in a new tab

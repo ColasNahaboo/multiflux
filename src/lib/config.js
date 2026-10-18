@@ -56,6 +56,7 @@ export function applyDefaults(raw) {
 	const oaGeometry = parseOaGeometry(raw.oaGeometry)
 	return {
 		server: normalizeServerUrl(raw.url),
+		configPath: String(raw.configPath || '/etc/multiflux/config.yaml'),
 		apiToken: String(raw.apiToken).trim(),
 		maxItems: Math.min(
 			1000,

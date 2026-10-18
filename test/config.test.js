@@ -51,6 +51,7 @@ test('applyDefaults fills missing keys and validates', () => {
 		apiToken: 'x',
 	})
 	assert.equal(cfg.server, 'https://rss.nahaboo.org')
+	assert.equal(cfg.configPath, '/etc/multiflux/config.yaml')
 	assert.equal(cfg.maxItems, 100)
 	assert.equal(cfg.theme, 'auto')
 	assert.equal(cfg.oaMode, 'window')
