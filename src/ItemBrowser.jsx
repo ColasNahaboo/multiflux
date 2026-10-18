@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react'
 import styled from 'styled-components'
 import { useHotkeys } from 'react-hotkeys-hook'
 import Icon from './Icon'
+import AppLogo from './AppLogo'
 import { beginAutoRead } from './lib/settings'
 import { mergeFetchedContent } from './lib/entryContent'
 import { bookmarkStateControlStyles } from './readStateStyles'
@@ -483,6 +484,16 @@ function FeedItemHeader(props) {
 	return (
 		<Header>
 			<HeaderTop>
+				{props.feedPaneCollapsed && <AppLogo />}
+				{props.feedPaneCollapsed && (
+					<ControlButton
+						onClick={props.onRestoreFeedPane}
+						title='Show feed navigation'
+						aria-label='Show feed navigation'
+					>
+						<Icon name='chevronRight' />
+					</ControlButton>
+				)}
 				{(props.currentFeed || props.searchQuery) && (
 					<HeaderText>
 						<HeaderTitle>
@@ -493,15 +504,6 @@ function FeedItemHeader(props) {
 					</HeaderText>
 				)}
 				<HeaderControls>
-					{props.feedPaneCollapsed && (
-						<ControlButton
-							onClick={props.onRestoreFeedPane}
-							title='Show feed navigation'
-							aria-label='Show feed navigation'
-						>
-							<Icon name='chevronRight' />
-						</ControlButton>
-					)}
 					{props.searchQuery && (
 						<ControlButton
 							onClick={props.onClearSearch}

@@ -13,6 +13,7 @@ import { ThemeProvider } from 'styled-components'
 import { lightTheme, darkTheme } from './themes'
 import ClickNHold from './ClickNHold'
 import Icon from './Icon'
+import AppLogo from './AppLogo'
 import { PRIMARY_HEADER_HEIGHT } from './layout'
 import { readAlwaysOpenFeedIds, writeAlwaysOpenFeedIds } from './lib/alwaysOpen'
 import {
@@ -1023,12 +1024,13 @@ function App({ config }) {
 						<>
 							<FeedPane>
 								<FeedToolbar>
+									<AppLogo />
 									<FloatingButton
 										onClick={collapseFeedPane}
 										title='Collapse feed navigation'
 										aria-label='Collapse feed navigation'
 									>
-										<Icon name='menu' />
+										<Icon name='chevronLeft' size={16} />
 									</FloatingButton>
 									<ToolbarSpacer />
 									<FloatingButton

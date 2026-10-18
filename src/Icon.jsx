@@ -5,12 +5,12 @@ import {
 	CheckmarkCircle16Regular,
 	ChevronDown16Regular,
 	ChevronRight16Regular,
+	ChevronLeft16Regular,
 	Circle16Regular,
 	Comment16Regular,
 	Dismiss16Regular,
 	Filter16Regular,
 	Search16Regular,
-	Navigation16Regular,
 	News16Regular,
 	Open16Regular,
 	Settings16Regular,
@@ -39,7 +39,6 @@ function GithubIcon({ className = '', style }) {
 }
 
 const icons = {
-	menu: Navigation16Regular,
 	refresh: ArrowSync16Regular,
 	settings: Settings16Regular,
 	github: GithubIcon,
@@ -60,6 +59,7 @@ const icons = {
 	circle: Circle16Regular,
 	checkCircle: CheckmarkCircle16Regular,
 	chevronRight: ChevronRight16Regular,
+	chevronLeft: ChevronLeft16Regular,
 	chevronDown: ChevronDown16Regular,
 }
 
