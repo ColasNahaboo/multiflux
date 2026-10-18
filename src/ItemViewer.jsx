@@ -9,6 +9,10 @@ import {
 import styled from 'styled-components'
 import { useHotkeys } from 'react-hotkeys-hook'
 import Icon from './Icon'
+import { getRuntimeConfig } from './runtimeConfig'
+
+// config loads before render; read lazily so configureRuntime() has run
+const getKeymap = () => getRuntimeConfig().keymap
 import {
 	bookmarkStateControlStyles,
 	readStateControlStyles,
@@ -358,21 +362,29 @@ function ItemViewer(props) {
 		[item, props.errorHandler, props.onContentFetched]
 	)
 
-	useHotkeys('f', () => toggleStar(), [item])
-	useHotkeys('v,d', () => item && openOrReuseOA(item.url), [item])
+	useHotkeys(getKeymap().toggleStar, () => toggleStar(), [item])
 	useHotkeys(
-		'a',
+		getKeymap().openOriginal,
+		() => item && openOrReuseOA(item.url),
+		[item]
+	)
+	useHotkeys(
+		getKeymap().openOriginalTab,
 		() => {
 			if (originalUrl) window.open(originalUrl, '_blank', 'noopener')
 		},
 		[originalUrl]
 	)
-	useHotkeys('w', () => fetchFullText(), [fetchFullText])
-	useHotkeys('c', () => commentsUrl && window.open(commentsUrl, '_blank'), [
-		commentsUrl,
+	useHotkeys(getKeymap().fetchFullText, () => fetchFullText(), [
+		fetchFullText,
 	])
 	useHotkeys(
-		'pagedown',
+		getKeymap().openComments,
+		() => commentsUrl && window.open(commentsUrl, '_blank'),
+		[commentsUrl]
+	)
+	useHotkeys(
+		getKeymap().scrollDown,
 		(e) => {
 			e.preventDefault()
 			const el = articleScrollRef.current
@@ -381,7 +393,7 @@ function ItemViewer(props) {
 		[]
 	)
 	useHotkeys(
-		'pageup',
+		getKeymap().scrollUp,
 		(e) => {
 			e.preventDefault()
 			const el = articleScrollRef.current

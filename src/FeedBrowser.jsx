@@ -3,6 +3,10 @@ import styled from 'styled-components'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { relaTimestamp } from './lib/util'
 import Icon from './Icon'
+import { getRuntimeConfig } from './runtimeConfig'
+
+// config loads before render; read lazily so configureRuntime() has run
+const getKeymap = () => getRuntimeConfig().keymap
 import FeedContextMenu, {
 	AddFeedDialog,
 	SourceTextDialog,
@@ -260,7 +264,7 @@ function FeedBrowser(props) {
 	}
 
 	useHotkeys(
-		'up',
+		getKeymap().prevFeed,
 		(e) => {
 			props.onFeedChange(
 				feeds[
@@ -275,7 +279,7 @@ function FeedBrowser(props) {
 	)
 
 	useHotkeys(
-		'down',
+		getKeymap().nextFeed,
 		(e) => {
 			props.onFeedChange(
 				feeds[
@@ -289,10 +293,12 @@ function FeedBrowser(props) {
 		[feeds, props.currentFeed]
 	)
 
-	useHotkeys('shift+u', () => toggleHideRead(), [hideRead])
+	useHotkeys(getKeymap().toggleHideReadFeeds, () => toggleHideRead(), [
+		hideRead,
+	])
 
 	useHotkeys(
-		'x',
+		getKeymap().toggleCategoryCollapse,
 		() => {
 			if (!props.currentFeed) return
 			const cat = props.currentFeed.is_feed

@@ -1,36 +1,39 @@
 import React, { useEffect, useRef } from 'react'
 import styled from 'styled-components'
 import { useHotkeys } from 'react-hotkeys-hook'
+import { formatBinding } from './lib/keymap'
 
-const keyMap = [
-	['Up', 'Open previous feed'],
-	['Down', 'Open next feed'],
-	['U', 'Toggle showing unread/all feeds'],
-	['x', 'Collapse/uncollapse current category'],
-	['Left/p/k/q', 'Open previous item'],
-	['Right/n/j/e/Space', 'Open next item'],
-	['Home', 'Open first item'],
-	['End', 'Open last item'],
-	['PageUp', 'Scroll item content up'],
-	['PageDown', 'Scroll item content down'],
-	['m', 'Mark item as read/unread'],
-	['t', 'Mark older items as read'],
-	['A', 'Mark all items as read'],
-	['u', 'Toggle showing unread/all items'],
-	['s', 'Toggle item sort order'],
-	['f', 'Star/unstar item'],
-	['v/d', 'Open original article in the OA window'],
-	['a', 'Open original article in a new tab'],
-	['w', 'Fetch and save full article content'],
-	['V', 'Always open original link for this feed'],
-	['W', 'Toggle auto-fetch on first view for this feed'],
-	['c', 'Open comments in a new tab'],
-	['D', 'Toggle light/dark theme'],
-	['r', 'Refresh unread counts'],
-	['R', 'Fetch feeds and refresh the feed list'],
-	['h/?', 'Show keyboard shortcuts'],
-	['Escape/Enter', 'Close this window'],
+const ACTIONS = [
+	['prevFeed', 'Open previous feed'],
+	['nextFeed', 'Open next feed'],
+	['toggleHideReadFeeds', 'Toggle showing unread/all feeds'],
+	['toggleCategoryCollapse', 'Collapse/uncollapse current category'],
+	['prevItem', 'Open previous item'],
+	['nextItem', 'Open next item'],
+	['firstItem', 'Open first item'],
+	['lastItem', 'Open last item'],
+	['scrollUp', 'Scroll item content up'],
+	['scrollDown', 'Scroll item content down'],
+	['toggleRead', 'Mark item as read/unread'],
+	['markOlderRead', 'Mark older items as read'],
+	['markAllRead', 'Mark all items as read'],
+	['toggleShowRead', 'Toggle showing unread/all items'],
+	['toggleSort', 'Toggle item sort order'],
+	['toggleStar', 'Star/unstar item'],
+	['openOriginal', 'Open original article in the OA window'],
+	['openOriginalTab', 'Open original article in a new tab'],
+	['fetchFullText', 'Fetch and save full article content'],
+	['toggleAlwaysOpen', 'Always open original link for this feed'],
+	['toggleAlwaysFullText', 'Toggle auto-fetch on first view for this feed'],
+	['openComments', 'Open comments in a new tab'],
+	['toggleTheme', 'Toggle light/dark theme'],
+	['refreshCounts', 'Refresh unread counts'],
+	['refreshFeeds', 'Fetch feeds and refresh the feed list'],
+	['help', 'Show keyboard shortcuts'],
+	['clearSearch', 'Clear search'],
 ]
+
+const STATIC_KEYS = [['Esc/Enter', 'Close this window']]
 
 const StyledDialog = styled.dialog`
 	background-color: ${(props) => props.theme.surface};
@@ -51,7 +54,7 @@ const KeyTable = styled.table`
 	padding: 5px;
 `
 
-export default function KeyHelpModal({ onClose }) {
+export default function KeyHelpModal({ keymap, onClose }) {
 	const dialogRef = useRef(null)
 	const previouslyFocusedRef = useRef(document.activeElement)
 
@@ -78,7 +81,13 @@ export default function KeyHelpModal({ onClose }) {
 					</tr>
 				</thead>
 				<tbody>
-					{keyMap.map(([key, command]) => (
+					{ACTIONS.map(([action, command]) => (
+						<tr key={action}>
+							<td>{formatBinding(keymap[action])}</td>
+							<td>{command}</td>
+						</tr>
+					))}
+					{STATIC_KEYS.map(([key, command]) => (
 						<tr key={key}>
 							<td>{key}</td>
 							<td>{command}</td>

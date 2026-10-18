@@ -1,32 +1,68 @@
 import { normalizeServerUrl } from './settings.js'
+import { buildKeymap } from './keymap.js'
+
+function stripComment(line) {
+	if (!line.includes('#')) return line
+	let quote = null
+	for (let i = 0; i < line.length; i++) {
+		const ch = line[i]
+		if (quote) {
+			if (ch === quote) quote = null
+		} else if (ch === '"' || ch === "'") quote = ch
+		else if (ch === '#' && (i === 0 || /\s/.test(line[i - 1])))
+			return line.slice(0, i)
+	}
+	return line
+}
 
 export function parseSimpleYaml(text) {
 	const config = {}
-	let currentListKey = null
+	let currentKey = null
+	let currentKind = null
 	const lines = String(text).split(/\r?\n/)
 	lines.forEach((raw, index) => {
 		const lineNo = index + 1
-		if (!raw.trim() || /^\s*#/.test(raw)) return
-		const listItem = raw.match(/^\s+-\s+(.*)$/)
+		const line = stripComment(raw)
+		if (!line.trim() || /^\s*#/.test(line)) return
+		const listItem = line.match(/^\s+-\s+(.*)$/)
 		if (listItem) {
-			if (!currentListKey)
+			if (currentKind !== 'list')
 				throw new Error(`YAML list item without key on line ${lineNo}`)
-			config[currentListKey].push(unquote(listItem[1].trim()))
+			config[currentKey].push(unquote(listItem[1].trim()))
 			return
 		}
-		if (/^\s/.test(raw))
-			throw new Error(`Unexpected indentation on line ${lineNo}`)
-		const pair = raw.match(/^([A-Za-z_][\w]*)\s*:\s*(.*)$/)
+		const pair = line.match(/^(\s*)([A-Za-z_][\w-]*)\s*:\s*(.*)$/)
 		if (!pair) throw new Error(`Invalid YAML on line ${lineNo}`)
-		currentListKey = null
-		const [, key, value] = pair
+		const [, indent, key, value] = pair
+		if (indent) {
+			if (!currentKey)
+				throw new Error(`Unexpected indentation on line ${lineNo}`)
+			if (currentKind === 'list') {
+				if (config[currentKey].length)
+					throw new Error(
+						`Mixed list and map under ${currentKey} on line ${lineNo}`
+					)
+				config[currentKey] = {}
+				currentKind = 'map'
+			}
+			if (currentKind !== 'map')
+				throw new Error(`Unexpected indentation on line ${lineNo}`)
+			if (!value)
+				throw new Error(`Nested key without value on line ${lineNo}`)
+			config[currentKey][key] = scalar(value.trim())
+			return
+		}
+		currentKey = key
 		if (value === '') {
 			config[key] = []
-			currentListKey = key
+			currentKind = 'list'
 		} else {
 			config[key] = scalar(value.trim())
+			currentKind = null
 		}
 	})
+	// An empty "key:" with no children stays an empty list; convert maps
+	// lazily assigned above only when children were map pairs.
 	return config
 }
 
@@ -72,6 +108,9 @@ export function applyDefaults(raw) {
 					.split(',')
 					.map((value) => value.trim())
 					.filter(Boolean),
+		keymap: buildKeymap(
+			raw.keys && !Array.isArray(raw.keys) ? raw.keys : undefined
+		),
 	}
 }
 

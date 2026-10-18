@@ -30,3 +30,6 @@ apiToken: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
 # autoReadTitleKeywords:
 #   - trump
 #   - elon musk
+# keys:                  # rebind keyboard shortcuts (partial overrides ok);
+#   nextItem: j,n        # see keys.example.yaml for every action + syntax;
+#   toggleTheme: ctrl+alt+t   # invalid bindings abort startup with an error

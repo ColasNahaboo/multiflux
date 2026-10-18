@@ -55,6 +55,7 @@ src/lib/settings.js   Keyword matching, auto-read, URL normalize, unread totals
 src/lib/entryContent.js Miniflux full-text endpoint and entry content merge
 src/lib/alwaysFullText.js Per-feed auto-fetch preference and fetched-entry cache
 src/lib/config.js     config.yaml fetch + minimal YAML parser + defaults
+src/lib/keymap.js     Default key bindings, validation, formatting
 src/lib/host.js       Host adapter: OA window reuse (window.open named), theme storage
 src/lib/alwaysOpen.js Always-open-original feed IDs (localStorage)
 src/runtimeConfig.js  Config singleton
@@ -163,6 +164,13 @@ page to apply edits. The settings gear button just reloads.
 | `Up/Down`                   | Navigate feeds                                |
 | `x`                         | Collapse/uncollapse category                  |
 | `U`                         | Toggle unread/all feeds                       |
+
+All bindings live in `src/lib/keymap.js` (`DEFAULT_KEYMAP`, action names)
+and are overridable per action via a nested `keys:` map in `config.yaml`;
+`keys.example.yaml` documents the defaults. Bindings are validated at
+startup (unknown actions, invalid tokens, browser-reserved chords, and
+cross-action conflicts abort with an error). The help modal renders the
+live bindings via `formatBinding()`.
 
 ## Features beyond upstream miniflux-companion
 

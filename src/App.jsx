@@ -941,21 +941,21 @@ function App({ config }) {
 	}, [feedPaneWidth, itemPaneWidth, feedPaneCollapsed])
 
 	useHotkeys(
-		'h,?',
+		config.keymap.help,
 		() => {
 			setHelpOpen(true)
 		},
 		[]
 	)
 	useHotkeys(
-		'esc',
+		config.keymap.clearSearch,
 		() => {
 			if (searchOpen || searchQuery) clearSearch()
 		},
 		[searchOpen, searchQuery]
 	)
 	useHotkeys(
-		'shift+d',
+		config.keymap.toggleTheme,
 		() => {
 			setTheme(theme === 'light' ? 'dark' : 'light')
 		},
@@ -963,28 +963,28 @@ function App({ config }) {
 	)
 
 	useHotkeys(
-		'r',
+		config.keymap.refreshCounts,
 		() => {
 			refreshFeedCounts()
 		},
 		[feeds]
 	)
 	useHotkeys(
-		'shift+r',
+		config.keymap.refreshFeeds,
 		() => {
 			refreshFeeds()
 		},
 		[feeds]
 	)
 	useHotkeys(
-		'shift+v',
+		config.keymap.toggleAlwaysOpen,
 		() => {
 			toggleAlwaysOpen()
 		},
 		[alwaysOpenFeed, alwaysOpenActive, alwaysOpenFeedIds]
 	)
 	useHotkeys(
-		'shift+w',
+		config.keymap.toggleAlwaysFullText,
 		() => {
 			toggleAlwaysFullText()
 		},
@@ -1002,7 +1002,12 @@ function App({ config }) {
 			}
 		>
 			<GlobalStyles />
-			{helpOpen && <KeyHelpModal onClose={() => setHelpOpen(false)} />}
+			{helpOpen && (
+				<KeyHelpModal
+					keymap={config.keymap}
+					onClose={() => setHelpOpen(false)}
+				/>
+			)}
 			<div>
 				{error && (
 					<ErrorDiv>

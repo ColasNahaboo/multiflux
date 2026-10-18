@@ -4,7 +4,7 @@
 [Miniflux](https://miniflux.app/) server, with:
 
 -   "gaming" keyboard navigation (aka WASD) on the left hand to leave the right hand free to use the mouse instead of the VI keys (HJKL)
--   "3+1" panes: the 3 traditional panes (feeds, articles, article) plus an optrional standalone full browser view of the original article, to make use of modern big wide screens.
+-   "3+1" panes: the 3 traditional panes (feeds, articles, article) plus an optional standalone full browser view of the original article, to make use of modern big wide screens.
 
 ## What it is
 
@@ -38,9 +38,9 @@ server — no backend, no accounts, no store, no telemetry.
 
 ## Installation
 
-1.  **Build and deploy** with the provided `INSTALL` script (runs
-    `npm run build`, then rsyncs `dist/` — with `--delete` — to the target
-    directory):
+1. **Build and deploy** with the provided `INSTALL` script (runs
+   `npm run build`, then rsyncs `dist/` — with `--delete` — to the target
+   directory):
 
     ```bash
     git clone https://github.com/ColasNahaboo/multiflux && cd multiflux
@@ -60,9 +60,9 @@ server — no backend, no accounts, no store, no telemetry.
     Precedence: argument → `MULTIFLUX_INSTALL` → `.install-dir`. The target
     may be any path rsync understands, including remote (`host:/path`).
 
-2.  **Serve it** from a directory reachable under some path such as `/mf/`.
-    For Apache behind which Miniflux is reverse-proxied, this goes **before**
-    the catch-all `ProxyPass`:
+2. **Serve it** from a directory reachable under some path such as `/mf/`.
+   For Apache behind which Miniflux is reverse-proxied, this goes **before**
+   the catch-all `ProxyPass`:
 
     ```apache
     Alias /mf /var/www/multiflux
@@ -74,10 +74,10 @@ server — no backend, no accounts, no store, no telemetry.
     ProxyPass / http://127.0.0.1:8080/
     ```
 
-3.  **Configure** — copy `config.example.yaml` to a file served as
-    `/mf/config.yaml`. Keep it **outside** the deployed directory (e.g.
-    `/etc/multiflux/config.yaml` with its own `Alias`) so upgrades can never
-    delete it:
+3. **Configure** — copy `config.example.yaml` to a file served as
+   `/mf/config.yaml`. Keep it **outside** the deployed directory (e.g.
+   `/etc/multiflux/config.yaml` with its own `Alias`) so upgrades can never
+   delete it:
 
     ```yaml
     url: https://rss.example.org
@@ -89,8 +89,8 @@ server — no backend, no accounts, no store, no telemetry.
     # refresh: 60
     ```
 
-4.  **Protect `config.yaml`** — it contains the API token. Restrict it to
-    your LAN, or put it behind Basic auth (`RequireAny` of both is handy):
+4. **Protect `config.yaml`** — it contains the API token. Restrict it to
+   your LAN, or put it behind Basic auth (`RequireAny` of both is handy):
 
     ```apache
     Alias /mf/config.yaml /etc/multiflux/config.yaml
@@ -108,8 +108,8 @@ server — no backend, no accounts, no store, no telemetry.
     </Location>
     ```
 
-5.  Open `https://rss.example.org/mf/`. The page loads its config at startup;
-    reload after any edit.
+5. Open `https://rss.example.org/mf/`. The page loads its config at startup;
+   reload after any edit.
 
 ## Upgrading
 
@@ -150,12 +150,23 @@ Check the release notes for new `config.yaml` keys.
 | `Up/Down`                   | Navigate feeds                                |
 | `x`                         | Collapse/uncollapse category                  |
 
+Every shortcut is **rebindable** in `config.yaml` under a `keys:` section —
+see [`keys.example.yaml`](keys.example.yaml) for the full default mapping,
+action names, and modifier syntax (`ctrl`, `shift`, `alt`; comma-separated
+aliases). Omitted actions keep their defaults; invalid or browser-reserved
+bindings abort startup with an explanatory error. The in-app help (`h`)
+always lists your currently active bindings.
+
+## AI Co-Design Disclosure
+
+![Co-Designed with AI](https://img.shields.io/badge/Co--Designed%20with-AI-blueviolet?style=flat-square&logo=openai)
+
+This repository is developed by me, a human hobbyist in my personal time in close collaboration with various AI programming assistants. System architecture, logic design, and final reviews are handled by me, while code scaffolding, repetitive tasks, and standard styling are co-piloted by AI. AI contributions are commited under their model name, and can be quite verbose for tracability.
+
 ## History
 
-v1.x was a Firefox/Chrome extension (a fork of
-[miniflux-companion](https://codeberg.org/gbcox/miniflux-companion), GPL v3).
-The extension was retired in favor of this web app; its code lives in git history up to `v1.0.0`.
+-   v1.x (not released) was a Firefox/Chrome extension (a fork of the nice [miniflux-companion](https://codeberg.org/gbcox/miniflux-companion), GPL v3 by Gerald Cox). The extension was retired in favor of this web app; its code lives in git history up to `v1.0.0`.
 
 ## License
 
-GPL-3.0-or-later © Colas Nahaboo (upstream: Gerald Cox)
+GPL-3.0-or-later © Colas Nahaboo 2026 (upstream: Gerald Cox)

@@ -3,6 +3,10 @@ import React, { useState, useEffect, useMemo, useRef } from 'react'
 import styled from 'styled-components'
 import { useHotkeys } from 'react-hotkeys-hook'
 import Icon from './Icon'
+import { getRuntimeConfig } from './runtimeConfig'
+
+// config loads before render; read lazily so configureRuntime() has run
+const getKeymap = () => getRuntimeConfig().keymap
 import AppLogo from './AppLogo'
 import { beginAutoRead } from './lib/settings'
 import { mergeFetchedContent } from './lib/entryContent'
@@ -247,7 +251,7 @@ function FeedItemList(props) {
 		e.preventDefault()
 	}
 	useHotkeys(
-		'left,p,k,q',
+		getKeymap().prevItem,
 		(e) => {
 			kbItemChange(
 				props.items[
@@ -259,7 +263,7 @@ function FeedItemList(props) {
 		[props.items, props.currentIndex]
 	)
 	useHotkeys(
-		'right,n,j,space,e',
+		getKeymap().nextItem,
 		(e) => {
 			kbItemChange(
 				props.items[
@@ -275,21 +279,21 @@ function FeedItemList(props) {
 		[props.items, props.currentIndex]
 	)
 	useHotkeys(
-		'home',
+		getKeymap().firstItem,
 		(e) => {
 			kbItemChange(props.items[0], e)
 		},
 		[props.items, props.currentIndex]
 	)
 	useHotkeys(
-		'end',
+		getKeymap().lastItem,
 		(e) => {
 			kbItemChange(props.items[props.items.length - 1], e)
 		},
 		[props.items, props.currentIndex]
 	)
 	useHotkeys(
-		'm',
+		getKeymap().toggleRead,
 		(e) => {
 			if (props.currentIndex >= 0)
 				props.markRead(
@@ -300,7 +304,7 @@ function FeedItemList(props) {
 		[props.items, props.currentIndex]
 	)
 	useHotkeys(
-		't',
+		getKeymap().markOlderRead,
 		(e) => {
 			if (props.currentIndex < 0) return
 			const current = props.items[props.currentIndex]
@@ -475,11 +479,17 @@ function FeedItemHeader(props) {
 	const markAllRead = () => {
 		props.markRead(props.items)
 	}
-	useHotkeys('shift+A', () => markAllRead(), [props.items])
-	useHotkeys('u', () => props.setShowRead(!props.showRead), [props.showRead])
-	useHotkeys('s', () => props.setSortOldFirst(!props.sortOldFirst), [
-		props.sortOldFirst,
-	])
+	useHotkeys(getKeymap().markAllRead, () => markAllRead(), [props.items])
+	useHotkeys(
+		getKeymap().toggleShowRead,
+		() => props.setShowRead(!props.showRead),
+		[props.showRead]
+	)
+	useHotkeys(
+		getKeymap().toggleSort,
+		() => props.setSortOldFirst(!props.sortOldFirst),
+		[props.sortOldFirst]
+	)
 
 	return (
 		<Header>

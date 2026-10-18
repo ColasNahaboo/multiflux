@@ -137,3 +137,44 @@ test('oaMode accepts tab, popup, popdecor and legacy window', () => {
 		/oaMode/
 	)
 })
+
+test('parses one level of nested maps', () => {
+	const cfg = parseSimpleYaml(`
+keys:
+  prevItem: left, k, q
+  help: h, ?
+theme: light
+`)
+	assert.deepEqual(cfg.keys, { prevItem: 'left, k, q', help: 'h, ?' })
+	assert.equal(cfg.theme, 'light')
+})
+
+test('applyDefaults builds the keymap from keys overrides', () => {
+	const cfg = applyDefaults({
+		url: 'https://x',
+		apiToken: 't',
+		keys: { nextItem: 'j' },
+	})
+	assert.equal(cfg.keymap.nextItem, 'j')
+	assert.equal(cfg.keymap.prevItem, 'left,p,k,q')
+	assert.throws(
+		() =>
+			applyDefaults({
+				url: 'https://x',
+				apiToken: 't',
+				keys: { bogus: 'x' },
+			}),
+		/bogus/
+	)
+})
+
+test('strips trailing comments but not inside quotes', () => {
+	const cfg = parseSimpleYaml(`
+prevItem: left,p,k,q # previous entry
+theme: light   # comment
+url: "https://x/#frag"
+`)
+	assert.equal(cfg.prevItem, 'left,p,k,q')
+	assert.equal(cfg.theme, 'light')
+	assert.equal(cfg.url, 'https://x/#frag')
+})
