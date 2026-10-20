@@ -40,6 +40,7 @@ keys:
   openOriginal: v,d # open original article in the OA window
   openOriginalTab: a # open original article in a new browser tab
   fetchFullText: w # fetch and save full article content
+  saveEntry: shift+s # save entry to linkding (Miniflux save integration)
   toggleAlwaysOpen: shift+v # always open original link for this feed
   toggleAlwaysFullText: shift+w # auto-fetch full text for this feed
   openComments: c # open comments in a new tab

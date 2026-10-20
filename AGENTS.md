@@ -50,7 +50,9 @@ src/FeedContextMenu.jsx
 src/ItemBrowser.jsx   Entry list pane
 src/ItemViewer.jsx    Article pane (OA window, share buttons)
 src/KeyHelpModal.jsx  Keyboard shortcuts help
-src/lib/util.jsx      Miniflux API client (fetch wrapper)
+src/lib/util.jsx      Formatting and small helpers
+src/lib/api.js        Miniflux API client (fetch wrapper, token, /v1 prefix)
+src/lib/saveEntry.js  Miniflux save-to-third-party endpoint (linkding, ...)
 src/lib/settings.js   Keyword matching, auto-read, URL normalize, unread totals
 src/lib/entryContent.js Miniflux full-text endpoint and entry content merge
 src/lib/alwaysFullText.js Per-feed auto-fetch preference and fetched-entry cache
@@ -154,6 +156,7 @@ page to apply edits. The settings gear button just reloads.
 | `v / d`                     | Open original article in OA window            |
 | `a`                         | Open original article in a new tab            |
 | `w`                         | Fetch and save full article content           |
+| `Shift+S`                   | Save entry to linkding                        |
 | `V`                         | Always open original article for this feed    |
 | `W`                         | Toggle auto-fetch on first view for this feed |
 | `c`                         | Open comments in new tab                      |
@@ -181,6 +184,9 @@ live bindings via `formatBinding()`.
     real browser only)
 -   Vim-style aliases (q/k prev, e/j next, w fetch full text, ? help)
 -   `W` toggles per-feed auto-fetch; content is fetched and persisted on first view
+-   `Shift+S` / button saves the entry through Miniflux's save integration
+    (linkding here — every enabled save integration receives it); the button
+    is hidden when none is configured
 -   `t` mark-all-older-as-read + undo toasts for `t`/`A` (30s)
 -   Entry sort direction / category order from server prefs
 -   Auto-read by title keywords
@@ -188,7 +194,7 @@ live bindings via `formatBinding()`.
 ## Conventions
 
 -   React 19 + styled-components + Vite; no router, no state library
--   All Miniflux access through `apiCall()` in `src/lib/util.jsx`
+-   All Miniflux access through `apiCall()` in `src/lib/api.js`
 -   No `browser.*` / WebExtension APIs anywhere — host-specific behavior goes
     through `src/lib/host.js`
 -   TDD: node --test first for lib/ logic; E2E via playwright-cli against a

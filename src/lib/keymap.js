@@ -106,6 +106,7 @@ export const DEFAULT_KEYMAP = {
 	openOriginal: 'v,d',
 	openOriginalTab: 'a',
 	fetchFullText: 'w',
+	saveEntry: 'shift+s',
 	openComments: 'c',
 	scrollDown: 'pagedown',
 	scrollUp: 'pageup',

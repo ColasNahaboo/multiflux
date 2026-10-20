@@ -1,4 +1,5 @@
-import { apiCall, relaTimestamp } from './lib/util'
+import { apiCall } from './lib/api'
+import { relaTimestamp } from './lib/util'
 import React, { useState, useEffect, useMemo, useRef } from 'react'
 import styled from 'styled-components'
 import { useHotkeys } from 'react-hotkeys-hook'

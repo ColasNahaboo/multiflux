@@ -1,11 +1,10 @@
 # Multiflux
 
-<img src="public/icons/multiflux.svg" align="right" width="200" height="200">Keyboard-first three--plus-one pane web reader for your self-hosted
-[Miniflux](https://miniflux.app/) server, with:
+<img src="public/icons/multiflux.svg" align="right" width="200" height="200">Keyboard-first three--plus-one pane web reader for a self-hosted
+[Miniflux](https://miniflux.app/) server, with two main motivations:
 
-- "gaming" default keyboard navigation (aka WASD) on the left hand to leave the right hand free to use the mouse instead of the VI keys (HJKL)
-- all keys are **fully remappable**
-- "3+1" panes: the 3 traditional panes (feeds, articles, article) plus an optional standalone full browser view of the original article, to make use of modern big wide screens.
+- **Fully remappable keys** so that for instance using a "gaming" keyboard navigation (aka WASD) on the left hand to leave the right hand free to use the mouse instead of the VI keys (HJKL).
+- **Taking adevantage of big screens** with a "3+1" panes setup: the 3 traditional panes (feeds, articles, article) plus an optional standalone full browser view of the original article, to make use of modern big wide screens.
 
 ## What it is
 
@@ -24,18 +23,18 @@ server — no backend, no accounts, no store, no telemetry.
     `location`/`toolbar` features entirely), or in a new tab (`tab`)
 -   On-demand full-text extraction (`w`) and per-feed auto-fetch (`W`), saved
     back to Miniflux
+-   Save entries to your Miniflux save integration — linkding, Wallabag,
+    Shiori, … (`Shift+S`) — shown only when one is enabled
 -   Batch mark-read with 30s undo toasts, auto-read by title keywords
 -   Light/dark/auto themes; sort and category order from server preferences
 
 ## Requirements
 
--   A Miniflux instance (v2) with the API enabled (Settings → API) — you need
-    an API token
+-   A Miniflux instance (v2) with the API enabled (Settings → API). Multiflux needs an API token.
 -   Any static web server (Apache, nginx, Caddy…) able to serve a directory
-    of files; Node.js ≥ 20 only to build
-
-> The Miniflux API sends `Access-Control-Allow-Origin: *`, so the app works
+    of files. Note that The Miniflux API sends `Access-Control-Allow-Origin: *`, so the Multiflux app works whether you host it on the same origin as Miniflux or anywhere else.
 > whether you host it on the same origin as Miniflux or anywhere else.
+-   Node.js, but only used to build the application in `dists/`, that will be copied on the server as static files. Node.js is not used to run it.
 
 ## Installation
 
@@ -142,6 +141,7 @@ Check the release notes for new `config.yaml` keys.
 | `v / d`                     | Open original article in OA window            |
 | `a`                         | Open original article in a new tab            |
 | `w`                         | Fetch and save full article content           |
+| `Shift+S`                   | Save entry to linkding                        |
 | `V`                         | Always open original article for this feed    |
 | `W`                         | Toggle auto-fetch on first view for this feed |
 | `c`                         | Open comments in new tab                      |

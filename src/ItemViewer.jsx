@@ -1,7 +1,14 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { apiCall, formatDate } from './lib/util'
+import { apiCall } from './lib/api'
+import { formatDate } from './lib/util'
 import { openOriginalArticle } from './lib/host'
 import { fetchContentPath, mergeFetchedContent } from './lib/entryContent'
+import {
+	saveEntryPath,
+	integrationsStatusPath,
+	saveIntegrationEnabled,
+} from './lib/saveEntry'
+import { formatBinding } from './lib/keymap'
 import {
 	hasFetchedFullTextEntry,
 	markFullTextEntryFetched,
@@ -65,7 +72,7 @@ const ReaderArticle = styled.article`
 	overflow-wrap: anywhere;
 `
 
-const FullTextStatus = styled.div`
+const StatusMessage = styled.div`
 	max-width: 960px;
 	margin: 12px auto 0;
 	padding: 0 clamp(20px, 5%, 42px);
@@ -299,12 +306,15 @@ function ItemViewer(props) {
 	const articleScrollRef = useRef()
 	const shareFeedbackTimersRef = useRef({})
 	const fetchingFullTextRef = useRef(new Set())
+	const savingEntryRef = useRef(false)
 	const [activeShareControls, setActiveShareControls] = useState({})
 	const [fetchingFullTextIds, setFetchingFullTextIds] = useState(
 		() => new Set()
 	)
 	const [lastFetchedFullTextId, setLastFetchedFullTextId] = useState(null)
-	const [fullTextStatus, setFullTextStatus] = useState(null)
+	const [statusMessage, setStatusMessage] = useState(null)
+	const [saveAvailable, setSaveAvailable] = useState(true)
+	const [isSaving, setIsSaving] = useState(false)
 
 	const openOrReuseOA = useCallback((url) => {
 		openOriginalArticle(url)
@@ -317,7 +327,7 @@ function ItemViewer(props) {
 			const reportError = silent ? () => {} : props.errorHandler
 			fetchingFullTextRef.current.add(entryId)
 			setFetchingFullTextIds((current) => new Set(current).add(entryId))
-			setFullTextStatus((status) =>
+			setStatusMessage((status) =>
 				status?.itemId === entryId ? null : status
 			)
 
@@ -339,7 +349,7 @@ function ItemViewer(props) {
 					content: fetchedContent.content,
 				})
 				setLastFetchedFullTextId(entryId)
-				setFullTextStatus(
+				setStatusMessage(
 					fetchedContent.content === item.content && !silent
 						? {
 								itemId: entryId,
@@ -361,6 +371,41 @@ function ItemViewer(props) {
 		},
 		[item, props.errorHandler, props.onContentFetched]
 	)
+	const saveEntry = useCallback(async () => {
+		if (!item || !originalUrl || savingEntryRef.current) return
+		if (!saveAvailable) {
+			setStatusMessage({
+				itemId: item.id,
+				message: 'No save integration is configured in Miniflux.',
+			})
+			return
+		}
+
+		const entryId = item.id
+		savingEntryRef.current = true
+		setIsSaving(true)
+		setStatusMessage((status) =>
+			status?.itemId === entryId ? null : status
+		)
+
+		try {
+			await apiCall(
+				saveEntryPath(entryId),
+				props.errorHandler,
+				null,
+				'POST'
+			)
+			setStatusMessage({
+				itemId: entryId,
+				message: 'Entry saved to linkding.',
+			})
+		} catch {
+			// apiCall reports request failures through the app-level error handler.
+		} finally {
+			savingEntryRef.current = false
+			setIsSaving(false)
+		}
+	}, [item, originalUrl, saveAvailable, props.errorHandler])
 
 	useHotkeys(getKeymap().toggleStar, () => toggleStar(), [item])
 	useHotkeys(
@@ -378,6 +423,7 @@ function ItemViewer(props) {
 	useHotkeys(getKeymap().fetchFullText, () => fetchFullText(), [
 		fetchFullText,
 	])
+	useHotkeys(getKeymap().saveEntry, () => saveEntry(), [saveEntry])
 	useHotkeys(
 		getKeymap().openComments,
 		() => commentsUrl && window.open(commentsUrl, '_blank'),
@@ -421,6 +467,20 @@ function ItemViewer(props) {
 		openedItemRef.current = item.id
 		openOrReuseOA(url)
 	}, [item?.id, props.alwaysOpenActive])
+
+	// Mirrors Miniflux: the save action only makes sense when a third-party
+	// save integration (linkding, ...) is enabled. Fail open when unknown.
+	useEffect(() => {
+		let stale = false
+		apiCall(integrationsStatusPath(), () => {})
+			.then((status) => {
+				if (!stale) setSaveAvailable(saveIntegrationEnabled(status))
+			})
+			.catch(() => {})
+		return () => {
+			stale = true
+		}
+	}, [])
 
 	useEffect(
 		() => () => {
@@ -474,6 +534,9 @@ function ItemViewer(props) {
 		: lastFetchedFullTextId === item?.id
 		? 'Refresh full text (w)'
 		: 'Fetch and save full text (w)'
+	const saveActionLabel = isSaving
+		? 'Saving…'
+		: `Save to linkding (${formatBinding(getKeymap().saveEntry)})`
 
 	const toggleStar = async () => {
 		if (item) await props.onToggleBookmark(item)
@@ -566,6 +629,18 @@ function ItemViewer(props) {
 							aria-hidden='true'
 						/>
 					</ActionButton>
+					{saveAvailable && (
+						<ActionButton
+							type='button'
+							title={saveActionLabel}
+							aria-label={saveActionLabel}
+							disabled={!originalUrl || isSaving}
+							aria-busy={isSaving}
+							onClick={saveEntry}
+						>
+							<Icon name='save' size={16} />
+						</ActionButton>
+					)}
 					<ActionButton
 						type='button'
 						title={fullTextActionLabel}
@@ -617,10 +692,10 @@ function ItemViewer(props) {
 				</HeaderActions>
 			</ItemHeader>
 			<ArticleScroll ref={articleScrollRef}>
-				{fullTextStatus?.itemId === item.id && (
-					<FullTextStatus role='status'>
-						{fullTextStatus.message}
-					</FullTextStatus>
+				{statusMessage?.itemId === item.id && (
+					<StatusMessage role='status'>
+						{statusMessage.message}
+					</StatusMessage>
 				)}
 				<ReaderArticle>
 					<ItemContent
