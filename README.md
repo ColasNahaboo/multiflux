@@ -141,7 +141,7 @@ Check the release notes for new `config.yaml` keys.
 | `v / d`                     | Open original article in OA window            |
 | `a`                         | Open original article in a new tab            |
 | `w`                         | Fetch and save full article content           |
-| `Shift+S`                   | Save entry to linkding                        |
+| `Shift+S`                   | Save entry via miniflux                       |
 | `V`                         | Always open original article for this feed    |
 | `W`                         | Toggle auto-fetch on first view for this feed |
 | `c`                         | Open comments in new tab                      |

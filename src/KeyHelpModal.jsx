@@ -23,7 +23,7 @@ const ACTIONS = [
 	['openOriginal', 'Open original article in the OA window'],
 	['openOriginalTab', 'Open original article in a new tab'],
 	['fetchFullText', 'Fetch and save full article content'],
-	['saveEntry', 'Save entry to linkding'],
+	['saveEntry', 'Save entry via miniflux'],
 	['toggleAlwaysOpen', 'Always open original link for this feed'],
 	['toggleAlwaysFullText', 'Toggle auto-fetch on first view for this feed'],
 	['openComments', 'Open comments in a new tab'],

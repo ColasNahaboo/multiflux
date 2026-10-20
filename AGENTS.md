@@ -155,8 +155,8 @@ page to apply edits. The settings gear button just reloads.
 | `f`                         | Star/unstar item                              |
 | `v / d`                     | Open original article in OA window            |
 | `a`                         | Open original article in a new tab            |
-| `w`                         | Fetch and save full article content           |
-| `Shift+S`                   | Save entry to linkding                        |
+| `w`                         | Fetch full article content                    |
+| `Shift+S`                   | Save entry via miniflux                       |
 | `V`                         | Always open original article for this feed    |
 | `W`                         | Toggle auto-fetch on first view for this feed |
 | `c`                         | Open comments in new tab                      |
